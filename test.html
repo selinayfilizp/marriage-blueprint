@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Take the test | The Marriage Blueprint</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .likert { display: flex; gap: 6px; margin: 8px 0 4px; }
+  .likert label { flex: 1; text-align: center; border: 1px solid var(--hair); border-radius: 8px; padding: 8px 4px; font-size: 12px; cursor: pointer; background: var(--card); color: var(--muted); }
+  .likert input { display: none; }
+  .likert label:has(input:checked) { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .item { padding: 14px 0; border-bottom: 1px solid var(--hair); }
+  .item:last-child { border-bottom: none; }
+  .item p { margin: 0 0 4px; font-size: 15px; }
+  textarea { width: 100%; font: inherit; font-size: 14px; padding: 12px; border: 1px solid var(--hair); border-radius: 10px; min-height: 110px; resize: vertical; background: var(--card); }
+  select, input[type=text] { font: inherit; padding: 8px 12px; border: 1px solid var(--hair); border-radius: 8px; background: var(--card); width: 100%; }
+  .row { display: flex; gap: 12px; }
+  .row > div { flex: 1; }
+  .nav { display: flex; justify-content: space-between; margin-top: 20px; }
+  .progress { height: 4px; background: var(--hair); border-radius: 2px; margin-bottom: 24px; }
+  .progress div { height: 100%; background: var(--ink); border-radius: 2px; transition: width 0.3s; }
+  .badge-a { background: var(--purple-bg); color: var(--purple); }
+  .badge-b { background: var(--teal-bg); color: var(--teal); }
+  .checkgrid label { display: flex; gap: 10px; align-items: flex-start; padding: 9px 12px; border: 1px solid var(--hair); border-radius: 8px; margin-bottom: 8px; font-size: 14px; cursor: pointer; }
+  .checkgrid label:has(input:checked) { background: var(--blue-bg); border-color: var(--blue); }
+  .checkgrid input { margin-top: 4px; }
+  .dimrow { display: grid; grid-template-columns: 150px 1fr 64px; gap: 12px; align-items: center; padding: 8px 0; }
+  .dimtrack { position: relative; height: 26px; }
+  .dimtrack .line { position: absolute; top: 11px; left: 0; right: 0; height: 4px; background: var(--hair); border-radius: 2px; }
+  .dot { position: absolute; top: 7px; width: 12px; height: 12px; border-radius: 50%; transform: translateX(-6px); }
+  .gapband { position: absolute; top: 7px; height: 12px; border-radius: 3px; }
+  .alertbox { border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; font-size: 14px; }
+  .center { text-align: center; }
+  @media print { button, .nav, .progress, .topnav { display: none !important; } body { background: #fff; } }
+</style>
+</head>
+<body>
+<nav class="topnav"><div class="inner">
+  <a class="brand" href="index.html">The Marriage Blueprint</a>
+  <a href="index.html">Home</a>
+  <a href="test.html" class="active">Take the test</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="limitations.html">Limitations</a>
+</div></nav>
+<div class="wrap" id="app"></div>
+
+<script>
+/* =====================================================================
+   THE MARRIAGE BLUEPRINT, v0.1 (research prototype)
+   Three-layer assessment based on the vulnerability-stress-adaptation
+   model (Karney & Bradbury, 1995). See the Methodology page for the
+   research basis of every dimension, item, weight, and rule.
+   ===================================================================== */
+
+const DIMENSIONS = [
+  { key: 'ATT', name: 'Attachment security', layer: 'Enduring vulnerabilities', weight: 2,
+    basis: 'Insecure attachment negatively predicts satisfaction across 132 studies (meta-analysis).',
+    items: [
+      { t: 'I find it easy to depend on my partner and to have my partner depend on me.', r: false },
+      { t: 'I worry that my partner does not really love me, or will not want to stay with me.', r: true },
+      { t: 'I am comfortable sharing my private thoughts and feelings with my partner.', r: false },
+      { t: 'I prefer not to show my partner how I feel deep down.', r: true },
+    ]},
+  { key: 'PER', name: 'Emotional stability', layer: 'Enduring vulnerabilities', weight: 2,
+    basis: 'Low neuroticism is the most consistent personality predictor of marital outcomes (Malouff et al., 2010).',
+    items: [
+      { t: 'I stay calm under pressure, even when things go wrong.', r: false },
+      { t: 'Small frustrations can ruin my whole day.', r: true },
+      { t: 'When I am upset, I can usually name what I am feeling and why.', r: false },
+      { t: 'People close to me would describe me as moody.', r: true },
+    ]},
+  { key: 'FAM', name: 'Family-of-origin awareness', layer: 'Enduring vulnerabilities', weight: 1,
+    basis: 'Family background is a distinct predictive context (RELATE framework; Busby et al., 2001).',
+    items: [
+      { t: 'I can describe specific patterns from my childhood home that show up in how I handle conflict today.', r: false },
+      { t: 'In the home I grew up in, disagreements were handled openly and eventually resolved.', r: false },
+      { t: 'There are topics from my family history I avoid thinking or talking about.', r: true },
+      { t: 'I have talked with my partner about what my parents’ relationship taught me, good and bad.', r: false },
+    ]},
+  { key: 'HIS', name: 'Relationship narrative', layer: 'Enduring vulnerabilities', weight: 1,
+    basis: 'Courtship stories foreshadow 13-year outcomes (Huston, PAIR project).',
+    items: [
+      { t: 'When I tell the story of how we got together, it is a story I am proud of.', r: false },
+      { t: 'Our relationship became serious mostly because of circumstances, not because we actively chose it.', r: true },
+      { t: 'Looking back at my past relationships, I can clearly say what I learned from each one.', r: false },
+      { t: 'I sometimes feel we drifted into this relationship rather than built it.', r: true },
+    ]},
+  { key: 'FIN', name: 'Financial alignment', layer: 'Stress landscape', weight: 2,
+    basis: 'Financial strain is the most common external stressor; stress independently predicts outcomes (VSA model).',
+    items: [
+      { t: 'I know roughly what my partner earns, owes, and saves.', r: false },
+      { t: 'Talking about money with my partner feels easy and normal.', r: false },
+      { t: 'I have a clear picture of what we are saving toward and why.', r: false },
+      { t: 'When it comes to spending, my partner and I have compatible instincts.', r: false },
+    ]},
+  { key: 'LIF', name: 'Life transition readiness', layer: 'Stress landscape', weight: 1,
+    basis: 'Anticipated stressors can be resourced against; unanticipated ones erode adaptation (VSA model).',
+    items: [
+      { t: 'We have talked concretely about whether, and roughly when, we want children.', r: false },
+      { t: 'We have discussed where we want to live over the next five years.', r: false },
+      { t: 'I know what my partner would do if one of us had to sacrifice a career opportunity for the other.', r: false },
+      { t: 'We have discussed how we would handle a parent needing long-term care.', r: false },
+    ]},
+  { key: 'DIG', name: 'Digital boundaries', layer: 'Stress landscape', weight: 1,
+    basis: 'Partner phubbing negatively predicts satisfaction (meta-analysis, 52 studies, N=19,698).',
+    items: [
+      { t: 'When we are together, my partner’s phone rarely competes with me for attention.', r: false },
+      { t: 'I often feel ignored in favor of a screen.', r: true },
+      { t: 'We have shared understandings, spoken or unspoken, about phones at meals and in bed.', r: false },
+      { t: 'Social media has caused real tension between us.', r: true },
+    ]},
+  { key: 'CON', name: 'Conflict competence', layer: 'Adaptive capacity', weight: 2,
+    basis: 'How conflict is conducted (not its presence) predicts dissolution (Gottman & Levenson, 1992).',
+    items: [
+      { t: 'When we disagree, I can raise the issue without attacking my partner’s character.', r: false },
+      { t: 'During arguments, I say things I later regret.', r: true },
+      { t: 'I can stay in a hard conversation even when I want to leave it.', r: false },
+      { t: 'Our disagreements usually end with me understanding my partner’s view better.', r: false },
+    ]},
+  { key: 'REP', name: 'Repair capacity', layer: 'Adaptive capacity', weight: 3,
+    basis: 'Repair attempts, and whether they are accepted, distinguish regulated from nonregulated couples.',
+    items: [
+      { t: 'After a fight, one of us reaches out to reconnect within a few hours.', r: false },
+      { t: 'When my partner tries to make peace mid-argument, I can accept it rather than stay angry.', r: false },
+      { t: 'We can laugh together even in the middle of a disagreement.', r: false },
+      { t: 'Small hurts between us tend to linger for days.', r: true },
+    ]},
+  { key: 'COM', name: 'Commitment structure', layer: 'Adaptive capacity', weight: 3,
+    basis: 'Satisfaction alone weakly predicts stability; commitment architecture predicts strongly (social exchange theory).',
+    items: [
+      { t: 'I am building my future plans around this relationship.', r: false },
+      { t: 'If things got really hard, I would still choose to work on this relationship rather than look elsewhere.', r: false },
+      { t: 'I sometimes keep my options open in the back of my mind.', r: true },
+      { t: 'Marriage to my partner feels like something I am actively choosing, not something happening to me.', r: false },
+    ]},
+];
+
+const SCENARIOS = [
+  { key: 'money', name: 'The money fork', initiator: 'A',
+    prompt: 'You have been saving together for a shared goal and you are about 60% of the way there. Your partner comes home and tells you their sibling is in serious financial trouble, and asks whether you would be willing to lend the sibling roughly half of what you have saved. Your partner clearly feels strongly about helping. What do you say?',
+    talk: [ 'Read each other’s written responses aloud. No reacting yet.',
+      'Each of you: “What was your gut reaction when you read my response?”',
+      'Together: “Is there a version of this where we both feel respected?”',
+      'Each of you: “What did your partner’s response reveal about what matters to them?”' ] },
+  { key: 'values', name: 'The values collision', initiator: 'B',
+    prompt: 'A close friend invites you both to an event that one of you finds meaningful and the other finds deeply uncomfortable. Not dangerous, but in conflict with something they value or believe. Your partner says they do not want to go, and would prefer you did not go either. You really want to go. What happens next?',
+    talk: [ '“What does this event represent to you? Not logistically, but identity-wise.”',
+      '“When you imagine your partner going without you (or you not going), what feeling comes up?”',
+      '“Is this a situation where compromise works, or does one person need to yield? How do we decide who?”',
+      '“Has something like this happened before between us? How did it go?”' ] },
+  { key: 'boundary', name: 'The boundary test', initiator: 'A',
+    prompt: 'Your partner’s parent has a pattern of subtle criticism toward you: about your career, your cooking, or how you keep your home. You have mentioned it to your partner twice. They said they would talk to their parent, but nothing changed. It happens again at a family dinner. What do you do, both in the moment and afterward with your partner?',
+    talk: [ 'Partner whose parent it is: “What makes it hard to set this boundary?”',
+      'Partner being criticized: “What does it feel like when nothing changes after you have raised it?”',
+      '“What would having each other’s back look like here, specifically?”',
+      '“If this pattern continued for ten years, what would it do to us?”' ] },
+  { key: 'future', name: 'The future fork', initiator: 'B',
+    prompt: 'One of you wants children within the next two years. The other is not sure. Not a hard no, but not ready, and not sure when they will be. A close friend just announced a pregnancy and it has raised the question again. Tonight over dinner, your partner brings it up. What do you say?',
+    talk: [ '“What does having (or not having) children mean for the life you imagine?”',
+      '“If you could guarantee your partner would be genuinely happy either way, which would you choose?”',
+      '“What is the difference between not yet and not sure? Where are you, honestly?”',
+      '“If this stays unresolved for two years, what happens?”' ] },
+  { key: 'career', name: 'The career vs. us', initiator: 'A',
+    prompt: 'Your partner gets a transformative career opportunity: a dream role, much better pay, real fulfillment. But it requires relocating to a city where you have no network, no job lined up, and a higher cost of living. They are clearly excited. They ask: “What do you think?” What do you say?',
+    talk: [ '“If the roles were reversed, would you give the same answer you just wrote?”',
+      '“What would you need in order to feel genuinely okay about this, not just resigned?”',
+      '“Is there a version of no that does not feel like betrayal to the person asking?”',
+      '“Whose career has been prioritized so far? Is that pattern intentional?”' ] },
+  { key: 'digital', name: 'The digital rift', initiator: 'B',
+    prompt: 'You are telling your partner about something that genuinely matters to you, not small talk. Mid-sentence, they pick up their phone and start scrolling. You stop talking. After a few seconds they look up and say, “Sorry, go on. I’m listening.” This is not the first time. What do you do?',
+    talk: [ 'Phone-checker: “What were you actually doing? Work, habit, or avoidance?”',
+      'Speaker: “What did that moment feel like: annoying, or something deeper?”',
+      '“Do we have a phone rule at dinner? Should we?”',
+      '“How do we signal I need your full attention right now?”' ] },
+];
+
+const MARKERS = [
+  { key: 'soft',      t: 'I raised (or received) the issue gently, without blame.', good: true },
+  { key: 'criticism', t: 'I criticized my partner’s character, not just the issue (“you always…”, “you’re the kind of person who…”).', good: false },
+  { key: 'contempt',  t: 'I used sarcasm, mockery, or eye-rolling, or felt superior to my partner.', good: false },
+  { key: 'defensive', t: 'I defended myself or counter-attacked instead of hearing them out.', good: false },
+  { key: 'stonewall', t: 'I went quiet, shut down, or wanted to leave the conversation.', good: false },
+  { key: 'repair',    t: 'I tried to de-escalate (humor, touch, acknowledgment, “let’s slow down”).', good: true },
+  { key: 'accepted',  t: 'When my partner tried to make peace, I accepted it.', good: true },
+  { key: 'resolved',  t: 'We ended with a concrete next step, not just a change of subject.', good: true },
+];
+
+const TYPES = {
+  builders: { name: 'The builders', share: '~9%', color: 'teal',
+    blurb: 'High across all dimensions. You are not conflict-free; you are conflict-competent. Your risk is complacency: strong couples sometimes stop doing the maintenance that made them strong.' },
+  harmonizers: { name: 'The harmonizers', share: '~8%', color: 'blue',
+    blurb: 'Emotionally fluent and genuinely close, but your closeness doubles as an avoidance strategy. Practical disagreements (money, family, logistics) get smoothed over, not resolved. Your emotional toolkit is your best asset for the conversations you are currently not having.' },
+  balancers: { name: 'The balancers', share: '~8%', color: 'green',
+    blurb: 'Moderate-to-good across the board, with no glaring weakness and no strong engine either. Steady, but at risk of coasting. Intentionality is your growth edge: choose the relationship on purpose, repeatedly.' },
+  conventionals: { name: 'The conventionals', share: '~10%', color: 'amber',
+    blurb: 'Strong shared values and clear roles carry you; structure compensates for communication gaps. That works until life throws something the structure did not anticipate. Skill-building in conflict and repair is your highest-leverage investment.' },
+  pragmatists: { name: 'The pragmatists', share: '~11%', color: 'amber',
+    blurb: 'The practical partnership runs beautifully: finances, plans, logistics. The emotional and intimate connection is thinner than the operation. Under sustained stress, partnerships need warmth to draw on. Build the emotional reserve now, while things are calm.' },
+  strivers: { name: 'The strivers', share: '~14%', color: 'coral',
+    blurb: 'You want this to work, and your commitment is real, but the conflict patterns are active and the adaptive skills are not yet there. You are exactly the profile that benefits most from structured skills work. This is very trainable.' },
+  drifters: { name: 'The drifters', share: '~40%', color: 'red',
+    blurb: 'Low engagement across most dimensions, often couples who are together by momentum rather than by ongoing choice. Getting this result before an engagement is precisely the point of taking this assessment now. It does not mean end it. It means: decide on purpose, with open eyes, after real conversations.' },
+};
+
+const state = {
+  screen: 'intro',
+  context: { nameA: '', nameB: '', duration: '', cohab: '', ses: '', kidsIntent: '' },
+  answers: { A: {}, B: {} },
+  scenIdx: 0, scenPhase: 0,
+  scenarios: SCENARIOS.map(() => ({ respA: '', respB: '', reflA: {}, reflB: {} })),
+  quizPartner: 'A', quizPage: 0,
+};
+
+const LAYERS = ['Enduring vulnerabilities', 'Stress landscape', 'Adaptive capacity'];
+const app = document.getElementById('app');
+const esc = s => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function pname(p) { return esc(state.context['name' + p]) || ('Partner ' + p); }
+
+function dimScore(partner, dim) {
+  const vals = state.answers[partner][dim.key] || [];
+  if (!vals.length) return null;
+  let sum = 0;
+  dim.items.forEach((it, i) => { const v = vals[i]; sum += it.r ? (6 - v) : v; });
+  return Math.round(((sum / dim.items.length) - 1) / 4 * 100);
+}
+
+function computeResults() {
+  const dims = DIMENSIONS.map(d => {
+    const a = dimScore('A', d), b = dimScore('B', d);
+    const couple = Math.round((a + b) / 2), gap = Math.abs(a - b);
+    let flag = 'aligned';
+    if (gap > 30 && d.weight >= 2) flag = 'alert';
+    else if (gap > 15) flag = 'gap';
+    return { ...d, a, b, couple, gap, flag };
+  });
+  const D = k => dims.find(d => d.key === k);
+
+  const tally = {}; MARKERS.forEach(m => tally[m.key] = 0);
+  let repairOffered = 0, repairAcceptedWhenOffered = 0, resolvedCount = 0;
+  state.scenarios.forEach(s => {
+    MARKERS.forEach(m => { if (s.reflA[m.key]) tally[m.key]++; if (s.reflB[m.key]) tally[m.key]++; });
+    const offered = s.reflA.repair || s.reflB.repair;
+    if (offered) { repairOffered++; if (s.reflA.accepted || s.reflB.accepted) repairAcceptedWhenOffered++; }
+    if (s.reflA.resolved || s.reflB.resolved) resolvedCount++;
+  });
+  const horsemen = tally.criticism + tally.defensive + tally.stonewall + 3 * tally.contempt;
+  const repairAcceptRate = repairOffered ? repairAcceptedWhenOffered / repairOffered : null;
+  const resolutionRate = resolvedCount / SCENARIOS.length;
+
+  const emotional = Math.round((D('ATT').couple + D('REP').couple + D('HIS').couple + D('DIG').couple) / 4);
+  const practical = Math.round((D('FIN').couple + D('LIF').couple + D('COM').couple) / 3);
+  const conflictSkill = Math.round((D('CON').couple + D('REP').couple) / 2);
+  const wsum = dims.reduce((s, d) => s + d.couple * d.weight, 0);
+  const wtot = dims.reduce((s, d) => s + d.weight, 0);
+  const overall = Math.round(wsum / wtot);
+
+  let type;
+  const alertCount = dims.filter(d => d.flag === 'alert').length;
+  if (overall >= 70 && horsemen <= 3 && emotional >= 65 && practical >= 65 && alertCount === 0) type = 'builders';
+  else if (emotional >= 65 && practical < 55) type = 'harmonizers';
+  else if (practical >= 65 && emotional < 55) type = 'pragmatists';
+  else if (D('COM').couple >= 70 && D('LIF').couple >= 60 && conflictSkill < 55) type = 'conventionals';
+  else if (horsemen >= 8 && D('COM').couple >= 55) type = 'strivers';
+  else if (overall < 45) type = 'drifters';
+  else if (overall >= 70 && alertCount === 0) type = 'builders';
+  else if (overall >= 70 && emotional >= practical) type = 'harmonizers';
+  else if (overall >= 70) type = 'pragmatists';
+  else type = 'balancers';
+
+  let trajectory = 'middle';
+  if (horsemen <= 3 && conflictSkill >= 65) trajectory = 'low';
+  else if (horsemen >= 10 || tally.contempt >= 2) trajectory = 'high';
+
+  let risk = 0;
+  if (tally.contempt >= 1) risk += 2;
+  if (horsemen >= 10) risk += 2; else if (horsemen >= 6) risk += 1;
+  risk += dims.filter(d => d.flag === 'alert').length;
+  if (D('COM').couple < 50) risk += 2;
+  if (D('PER').couple < 45) risk += 1;
+  if (repairAcceptRate !== null && repairAcceptRate < 0.5) risk += 1;
+  if (resolutionRate < 0.34) risk += 1;
+  let forecast = 'stable';
+  if (risk >= 5) forecast = 'at-risk'; else if (risk >= 3) forecast = 'declining';
+
+  const risks = [], protectives = [];
+  dims.filter(d => d.flag === 'alert').forEach(d =>
+    risks.push({ level: 'red', title: d.name + ' gap: ' + d.gap + ' points',
+      body: pname('A') + ' scores ' + d.a + ', ' + pname('B') + ' scores ' + d.b + '. This sits on a high-weight predictor (' + d.basis + '). Close this gap through explicit conversation before it becomes a pattern.' }));
+  if (tally.contempt >= 1)
+    risks.push({ level: 'red', title: 'Contempt detected (' + tally.contempt + ' instance' + (tally.contempt > 1 ? 's' : '') + ')',
+      body: 'Contempt (sarcasm, mockery, superiority) is the single strongest behavioral predictor of divorce in Gottman’s research. Even one instance is worth taking seriously. The antidote is building a culture of appreciation and describing your own feelings and needs instead of your partner’s flaws.' });
+  if (resolutionRate < 0.34)
+    risks.push({ level: 'amber', title: 'Conflict avoidance pattern',
+      body: 'Most of your scenario conversations ended without a concrete next step. De-escalation is a skill, but you may be using it as an exit ramp instead of a gear shift. Unresolved issues accumulate.' });
+  if (tally.stonewall >= 3)
+    risks.push({ level: 'amber', title: 'Recurring shutdown response',
+      body: 'One or both of you went quiet or wanted to leave in several scenarios. Stonewalling usually signals physiological flooding. The fix is a structured 20-minute break with a promise to return, not pushing through.' });
+  if (D('LIF').couple < 50)
+    risks.push({ level: 'amber', title: 'Unmapped future',
+      body: 'Children, geography, career priority, aging parents: several of these are undiscussed. These are dealbreaker-class topics that deserve explicit conversation before an engagement, not after.' });
+
+  if (tally.contempt === 0)
+    protectives.push({ title: 'Zero contempt reported', body: 'The strongest divorce predictor is absent across all six scenarios. This is your most important protective factor.' });
+  if (repairAcceptRate !== null && repairAcceptRate >= 0.7)
+    protectives.push({ title: 'Strong repair acceptance', body: 'When one of you reaches out to de-escalate, the other receives it. This distinguishes stable couples more reliably than the absence of conflict.' });
+  if (D('ATT').a >= 65 && D('ATT').b >= 65)
+    protectives.push({ title: 'Dual secure attachment', body: 'Both of you score in the secure range. Couples with two securely-attached partners show markedly higher satisfaction across 132 studies.' });
+  if (D('COM').couple >= 75)
+    protectives.push({ title: 'Strong commitment architecture', body: 'You are both building plans around this relationship and choosing it actively. Commitment predicts stability better than satisfaction does.' });
+  if (!protectives.length)
+    protectives.push({ title: 'You showed up', body: 'Doing this assessment before an engagement is itself a protective behavior. Couples who examine their relationship deliberately outperform couples who drift.' });
+
+  const PLAYBOOK = {
+    FIN: { title: 'Have the money conversation, for real', body: 'Not “joint account or not”; that is logistics. Each of you answer separately: (1) What is the most money has ever stressed you? (2) What is your earliest memory involving money? (3) With no constraints, how would our life look different? Compare answers. The gaps are the real conversation. If it stalls, 2-4 sessions with a financial therapist is high-value.' },
+    LIF: { title: 'Map the future explicitly', body: 'Take the four transitions (children, geography, career priority, aging parents) one per week. For each: write your honest individual answer first, then compare. The rule: no persuading in round one, just understanding. Misalignment you can see is manageable; misalignment you discover at year five is a crisis.' },
+    CON: { title: 'Practice the soft startup', body: 'The first three minutes of a conflict conversation predict its entire outcome. Formula: “I feel [emotion] about [specific situation], and I need [positive need].” No “you always”, no character verdicts. Practice on small issues weekly so it is available for big ones.' },
+    REP: { title: 'Build a repair ritual', body: 'Agree now, while calm, on your de-escalation signal (a word or a gesture) that either of you can use mid-argument. The rule: when it appears, both pause, and you return within 24 hours. Repair attempts only work when they are recognized and accepted.' },
+    COM: { title: 'Say the quiet part out loud', body: 'One or both of you is keeping options open or feels the relationship is happening rather than being chosen. That is information, not a verdict. Have the direct conversation: “What would make you choose this fully? What is in the way?” A relationship you both choose on purpose beats one you drift into.' },
+    ATT: { title: 'Work the attachment edge', body: 'Anxiety or avoidance patterns showed up in your profiles. Read “Attached” (Levine & Heller) or “Hold Me Tight” (Johnson) together, one chapter a week, discussed. If the pattern is strong, a few sessions of emotionally focused therapy (EFT) is the best-validated intervention.' },
+    PER: { title: 'Build an emotion-regulation practice', body: 'One or both of you runs hot or gets flooded. Individual work here pays relationship dividends: name the feeling, locate the trigger, take the 20-minute break before responding. This is the most trainable of all the vulnerabilities.' },
+    FAM: { title: 'Trace the inheritance', body: 'Each of you write: “When conflict happened in my childhood home, what did I see? What did I learn to do?” Share. You are each running inherited software; seeing the code is the first step to editing it.' },
+    DIG: { title: 'Set the device treaty', body: 'Agree on two concrete rules, for example phones face-down at meals and no scrolling during conversations, and one attention signal (“I need your full attention”). Phubbing measurably erodes satisfaction; the fix is structural, not willpower.' },
+    HIS: { title: 'Re-author your story', body: 'Separately write the story of how you got together and what made it serious. Read them to each other. Couples who narrate their relationship as chosen and built, not drifted into, show stronger long-term commitment. If the story feels passive, ask: what would choosing this actively look like?' },
+    AVOID: { title: 'Build a resolution practice: the 15-minute rule', body: 'When a disagreement surfaces, set a 15-minute timer. You do not have to solve it, but you cannot leave before the timer ends, and you must close with one concrete next step each. This converts “let’s not fight” exits into “let’s finish this” completions. Most perpetual problems need managing, not solving, but managing requires staying in the room.' },
+    CONTEMPT: { title: 'Install the appreciation habit', body: 'Contempt grows in a culture of criticism and starves in a culture of appreciation. Daily, each of you names one specific thing the other did that you appreciated. It feels mechanical for two weeks, then it rewires what you scan for. If contempt keeps surfacing, bring in a couples therapist early; it is far easier to treat at this stage.' },
+  };
+  const planKeys = [];
+  if (tally.contempt >= 1) planKeys.push('CONTEMPT');
+  dims.slice().sort((x, y) => (y.weight * (y.flag === 'alert' ? 40 : y.flag === 'gap' ? 20 : 0) + y.weight * (100 - y.couple)) -
+                              (x.weight * (x.flag === 'alert' ? 40 : x.flag === 'gap' ? 20 : 0) + x.weight * (100 - x.couple)))
+    .forEach(d => { if (planKeys.length < 4 && d.couple < 70 || d.flag !== 'aligned') { if (!planKeys.includes(d.key) && planKeys.length < 4) planKeys.push(d.key); } });
+  if (resolutionRate < 0.5 && !planKeys.includes('AVOID')) planKeys.splice(Math.min(1, planKeys.length), 0, 'AVOID');
+  const plan = planKeys.slice(0, 3).map(k => PLAYBOOK[k]);
+
+  return { dims, tally, horsemen, repairAcceptRate, resolutionRate, emotional, practical, conflictSkill, overall, type, trajectory, forecast, risks, protectives, plan };
+}
+
+function render() {
+  window.scrollTo(0, 0);
+  const s = state.screen;
+  if (s === 'intro') return renderIntro();
+  if (s === 'context') return renderContext();
+  if (s === 'quiz') return renderQuiz();
+  if (s === 'handoff') return renderHandoff();
+  if (s === 'modeb-intro') return renderModeBIntro();
+  if (s === 'scenario') return renderScenario();
+  if (s === 'report') return renderReport();
+}
+
+function renderIntro() {
+  app.innerHTML = `
+    <h1>Take the test</h1>
+    <p class="muted">A pre-engagement compatibility and readiness assessment. Version 0.1, research prototype.</p>
+    <div class="card">
+      <h2 style="margin-top:0">Before you begin</h2>
+      <p>This is a mirror, not a judge. It will never tell you whether to marry. It will show you the patterns research says matter most, so you can decide with open eyes.</p>
+      <p>It has two parts. <strong>Part one</strong> (about 15 minutes each, taken separately): individual questionnaires across ten research-backed dimensions. <strong>Part two</strong> (45-55 minutes, taken together): six scenario conversations that reveal how you actually navigate disagreement, not how you think you do.</p>
+      <p>Best taken while you are seriously dating, <em>before</em> an engagement. Research on 13-year couple trajectories shows the patterns visible now predict what comes later, and it is easier to act on what you learn before the ring changes the stakes.</p>
+      <p class="small">This prototype stores nothing on any server. Everything stays in this browser tab, and refreshing the page erases your progress. It is an unvalidated research prototype, not a clinical instrument, and is not a substitute for professional counseling. Read the <a href="limitations.html">limitations</a> before you start.</p>
+    </div>
+    <button class="primary" onclick="go('context')">Start</button>`;
+}
+
+function renderContext() {
+  const c = state.context;
+  app.innerHTML = `
+    <h2 style="margin-top:0">About you two</h2>
+    <p class="muted">Context matters: research shows the same behavior can be adaptive in one situation and harmful in another. These answers calibrate your results.</p>
+    <div class="card">
+      <div class="row" style="margin-bottom:12px">
+        <div><h3>Partner A, first name</h3><input type="text" id="nameA" value="${esc(c.nameA)}" placeholder="e.g. Selin"></div>
+        <div><h3>Partner B, first name</h3><input type="text" id="nameB" value="${esc(c.nameB)}" placeholder="e.g. Alex"></div>
+      </div>
+      <div class="row" style="margin-bottom:12px">
+        <div><h3>Time together</h3><select id="duration">
+          <option value="">Select…</option><option ${c.duration==='<1'?'selected':''} value="<1">Under 1 year</option>
+          <option ${c.duration==='1-3'?'selected':''} value="1-3">1-3 years</option>
+          <option ${c.duration==='3+'?'selected':''} value="3+">3+ years</option></select></div>
+        <div><h3>Living together?</h3><select id="cohab">
+          <option value="">Select…</option><option ${c.cohab==='no'?'selected':''} value="no">No</option>
+          <option ${c.cohab==='yes'?'selected':''} value="yes">Yes</option></select></div>
+      </div>
+      <div class="row">
+        <div><h3>Financial situation feels…</h3><select id="ses">
+          <option value="">Select…</option><option ${c.ses==='tight'?'selected':''} value="tight">Tight / stretched</option>
+          <option ${c.ses==='ok'?'selected':''} value="ok">Comfortable</option>
+          <option ${c.ses==='secure'?'selected':''} value="secure">Very secure</option></select></div>
+        <div><h3>Children someday?</h3><select id="kidsIntent">
+          <option value="">Select…</option><option ${c.kidsIntent==='both-yes'?'selected':''} value="both-yes">We both want them</option>
+          <option ${c.kidsIntent==='both-no'?'selected':''} value="both-no">We both do not</option>
+          <option ${c.kidsIntent==='differ'?'selected':''} value="differ">We differ / unsure</option></select></div>
+      </div>
+    </div>
+    <div class="nav"><button onclick="go('intro')">Back</button>
+    <button class="primary" onclick="saveContext()">Continue to Partner A’s questionnaire</button></div>`;
+}
+
+function saveContext() {
+  ['nameA','nameB','duration','cohab','ses','kidsIntent'].forEach(k => state.context[k] = document.getElementById(k).value.trim());
+  state.quizPartner = 'A'; state.quizPage = 0; go('quiz');
+}
+
+const QUIZ_PAGES = LAYERS.map(l => DIMENSIONS.filter(d => d.layer === l));
+
+function renderQuiz() {
+  const p = state.quizPartner, page = QUIZ_PAGES[state.quizPage];
+  const totalPages = QUIZ_PAGES.length;
+  const pct = ((state.quizPartner === 'B' ? totalPages : 0) + state.quizPage) / (totalPages * 2) * 100;
+  let html = `
+    <div class="progress"><div style="width:${pct}%"></div></div>
+    <span class="pill ${p === 'A' ? 'badge-a' : 'badge-b'}">${pname(p)}</span>
+    <h2 style="margin-top:8px">${page[0].layer}</h2>
+    <p class="muted">Answer honestly, as things are, not as you wish they were. Your partner will not see your individual answers, only the combined results.</p>`;
+  page.forEach(dim => {
+    html += `<div class="card"><h3 style="margin-top:0">${dim.name}</h3>`;
+    dim.items.forEach((it, i) => {
+      const cur = (state.answers[p][dim.key] || [])[i];
+      html += `<div class="item"><p>${it.t}</p><div class="likert">`;
+      ['Strongly disagree','Disagree','Neutral','Agree','Strongly agree'].forEach((lab, vi) => {
+        const v = vi + 1;
+        html += `<label><input type="radio" name="${dim.key}_${i}" value="${v}" ${cur === v ? 'checked' : ''} onchange="setAnswer('${dim.key}',${i},${v})"><span>${lab}</span></label>`;
+      });
+      html += `</div></div>`;
+    });
+    html += `</div>`;
+  });
+  html += `<div class="nav">
+    <button onclick="quizBack()">Back</button>
+    <button class="primary" id="quizNext" onclick="quizNext()">Continue</button></div>
+    <p class="small center" id="quizWarn" style="display:none;color:var(--red)">Please answer every statement before continuing.</p>`;
+  app.innerHTML = html;
+}
+
+function setAnswer(dimKey, i, v) {
+  const p = state.quizPartner;
+  if (!state.answers[p][dimKey]) state.answers[p][dimKey] = [];
+  state.answers[p][dimKey][i] = v;
+}
+
+function pageComplete() {
+  const p = state.quizPartner;
+  return QUIZ_PAGES[state.quizPage].every(dim =>
+    dim.items.every((_, i) => (state.answers[p][dim.key] || [])[i]));
+}
+
+function quizNext() {
+  if (!pageComplete()) { document.getElementById('quizWarn').style.display = 'block'; return; }
+  if (state.quizPage < QUIZ_PAGES.length - 1) { state.quizPage++; render(); }
+  else if (state.quizPartner === 'A') { go('handoff'); }
+  else { go('modeb-intro'); }
+}
+
+function quizBack() {
+  if (state.quizPage > 0) { state.quizPage--; render(); }
+  else go(state.quizPartner === 'A' ? 'context' : 'handoff');
+}
+
+function renderHandoff() {
+  app.innerHTML = `
+    <div class="card center" style="padding:48px 24px">
+      <h2 style="margin-top:0">${pname('A')}, you’re done with part one.</h2>
+      <p class="muted">Hand the device to ${pname('B')}. No peeking at each other’s answers. The reveal comes later, and it works better when it is honest.</p>
+      <button class="primary" onclick="startB()">I’m ${pname('B')}, start my questionnaire</button>
+    </div>`;
+}
+function startB() { state.quizPartner = 'B'; state.quizPage = 0; go('quiz'); }
+
+function renderModeBIntro() {
+  app.innerHTML = `
+    <h2 style="margin-top:0">Part two: six scenarios, together</h2>
+    <div class="card">
+      <p>This is the heart of the assessment. Six situations, each following the same four-step protocol:</p>
+      <p><strong>1. Write separately.</strong> Each of you writes what you would honestly say or do: not the ideal answer, the real one.<br>
+      <strong>2. Reveal.</strong> You read each other’s responses. No reacting yet.<br>
+      <strong>3. Talk.</strong> Guided prompts walk you through a real conversation. Aim for about 8 minutes.<br>
+      <strong>4. Reflect.</strong> Each of you privately checks off what actually happened in the conversation.</p>
+      <p class="muted">Find a quiet spot. No time pressure. Take a break halfway if you need it. The reflection step only works if you are honest, including about your own behavior.</p>
+    </div>
+    <button class="primary" onclick="state.scenIdx=0;state.scenPhase=0;go('scenario')">Begin scenario 1 of 6</button>`;
+}
+
+function renderScenario() {
+  const idx = state.scenIdx, sc = SCENARIOS[idx], data = state.scenarios[idx], ph = state.scenPhase;
+  const pct = (idx * 5 + ph) / (SCENARIOS.length * 5) * 100;
+  let html = `<div class="progress"><div style="width:${pct}%"></div></div>
+    <p class="small">Scenario ${idx + 1} of 6</p><h2 style="margin-top:0">${sc.name}</h2>`;
+
+  if (ph === 0 || ph === 1) {
+    const p = ph === 0 ? 'A' : 'B';
+    const key = ph === 0 ? 'respA' : 'respB';
+    html += `<span class="pill ${p === 'A' ? 'badge-a' : 'badge-b'}">${pname(p)}, write alone</span>
+      <div class="card" style="margin-top:12px"><p>${sc.prompt}</p></div>
+      <div class="card"><h3 style="margin-top:0">What would you actually say or do?</h3>
+      <textarea id="resp" placeholder="Be honest, not ideal…">${esc(data[key])}</textarea></div>
+      <div class="nav"><span></span><button class="primary" onclick="saveResp('${key}')">${ph === 0 ? 'Done. Pass to ' + pname('B') : 'Done. Reveal both responses'}</button></div>`;
+  } else if (ph === 2) {
+    html += `<span class="pill" style="background:var(--blue-bg);color:var(--blue)">Together: reveal &amp; talk</span>
+      <div class="card" style="margin-top:12px"><p class="small">${sc.prompt}</p></div>
+      <div class="row">
+        <div class="card"><h3 style="margin-top:0"><span class="pill badge-a">${pname('A')}</span></h3><p style="white-space:pre-wrap">${esc(data.respA) || '<em>(no response)</em>'}</p></div>
+        <div class="card"><h3 style="margin-top:0"><span class="pill badge-b">${pname('B')}</span></h3><p style="white-space:pre-wrap">${esc(data.respB) || '<em>(no response)</em>'}</p></div>
+      </div>
+      <div class="card"><h3 style="margin-top:0">Now talk it through (about 8 minutes)</h3>
+      <ol style="padding-left:20px;margin:0">${sc.talk.map(t => `<li style="margin-bottom:8px;font-size:14px">${t}</li>`).join('')}</ol></div>
+      <div class="nav"><span></span><button class="primary" onclick="state.scenPhase=3;render()">We have talked. Continue to reflection</button></div>`;
+  } else {
+    const p = ph === 3 ? 'A' : 'B';
+    const key = ph === 3 ? 'reflA' : 'reflB';
+    html += `<span class="pill ${p === 'A' ? 'badge-a' : 'badge-b'}">${pname(p)}, private reflection</span>
+      <div class="card" style="margin-top:12px"><h3 style="margin-top:0">During that conversation, which of these actually happened for you?</h3>
+      <p class="small">Check all that apply. Honesty here, especially about your own behavior, is what makes the results real.</p>
+      <div class="checkgrid">`;
+    MARKERS.forEach(m => {
+      html += `<label><input type="checkbox" ${data[key][m.key] ? 'checked' : ''} onchange="state.scenarios[${idx}].${key}.${m.key}=this.checked"><span>${m.t}</span></label>`;
+    });
+    html += `</div></div>
+      <div class="nav"><span></span><button class="primary" onclick="reflectNext()">${ph === 3 ? 'Done. Pass to ' + pname('B') : (idx < SCENARIOS.length - 1 ? 'Next scenario' : 'Finish and see your results')}</button></div>`;
+  }
+  app.innerHTML = html;
+}
+
+function saveResp(key) {
+  state.scenarios[state.scenIdx][key] = document.getElementById('resp').value;
+  state.scenPhase++; render();
+}
+function reflectNext() {
+  if (state.scenPhase === 3) { state.scenPhase = 4; render(); return; }
+  if (state.scenIdx < SCENARIOS.length - 1) { state.scenIdx++; state.scenPhase = 0; render(); }
+  else go('report');
+}
+
+function renderReport() {
+  const R = computeResults();
+  const T = TYPES[R.type];
+  const tc = { teal: ['#E1F5EE','#0F6E56'], blue: ['#E6F1FB','#185FA5'], green: ['#EAF3DE','#3B6D11'],
+    amber: ['#FAEEDA','#854F0B'], coral: ['#FAECE7','#993C1D'], red: ['#FCEBEB','#A32D2D'] }[T.color];
+  const flagStyle = { aligned: ['#E1F5EE','#0F6E56'], gap: ['#FAEEDA','#854F0B'], alert: ['#FCEBEB','#A32D2D'] };
+
+  let html = `<h1>Your Blueprint</h1>
+    <p class="muted">${pname('A')} &amp; ${pname('B')}: read together, out loud, with time to pause.</p>
+
+    <div class="card" style="border-top:4px solid ${tc[1]}">
+      <p class="small" style="text-transform:uppercase;letter-spacing:0.5px">Your partnership type</p>
+      <h2 style="font-size:24px;margin-top:0">${T.name} <span class="small" style="font-weight:400">${T.share} of couples</span></h2>
+      <p>${T.blurb}</p>
+    </div>
+
+    <div class="card">
+      <p class="small" style="text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Your dimension map</p>
+      <p class="small"><span style="color:var(--purple)">●</span> ${pname('A')} &nbsp; <span style="color:#1D9E75">●</span> ${pname('B')}</p>`;
+  LAYERS.forEach(l => {
+    html += `<p class="small" style="text-transform:uppercase;letter-spacing:0.5px;margin:14px 0 2px">${l}</p>`;
+    R.dims.filter(d => d.layer === l).forEach(d => {
+      const [bg, fg] = flagStyle[d.flag];
+      const lo = Math.min(d.a, d.b);
+      html += `<div class="dimrow">
+        <span style="font-size:13px">${d.name}</span>
+        <div class="dimtrack"><div class="line"></div>
+          ${d.gap > 15 ? `<div class="gapband" style="left:${lo}%;width:${d.gap}%;background:${bg}"></div>` : ''}
+          <div class="dot" style="left:${d.a}%;background:var(--purple)"></div>
+          <div class="dot" style="left:${d.b}%;background:#1D9E75"></div></div>
+        <span class="pill" style="background:${bg};color:${fg};text-align:center">${d.flag}</span></div>`;
+    });
+  });
+  html += `<p class="small" style="margin-top:12px">Aligned = within 15 points. Gap = 15 to 30 points: worth a conversation. Alert = more than 30 points on a high-weight predictor: needs attention before it becomes a pattern.</p></div>`;
+
+  const hm = [['Criticism', R.tally.criticism], ['Contempt', R.tally.contempt], ['Defensiveness', R.tally.defensive], ['Stonewalling', R.tally.stonewall]];
+  html += `<div class="card">
+    <p class="small" style="text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Your conflict portrait</p>
+    <div class="row">${hm.map(([n, c]) => {
+      const col = c === 0 ? '#0F6E56' : (n === 'Contempt' || c >= 4) ? '#A32D2D' : '#854F0B';
+      return `<div style="flex:1;text-align:center;background:var(--bg);border-radius:10px;padding:12px 4px">
+        <p class="small" style="margin:0">${n}</p><p style="font-size:22px;font-weight:600;margin:0;color:${col}">${c}</p>
+        <p class="small" style="margin:0">of 12 reports</p></div>`; }).join('')}</div>
+    <p style="margin-top:14px;font-size:14px">Repair attempts were made in <strong>${state.scenarios.filter(s => s.reflA.repair || s.reflB.repair).length} of 6</strong> scenarios${R.repairAcceptRate !== null ? ` and accepted <strong>${Math.round(R.repairAcceptRate * 100)}%</strong> of the time` : ''}. You reached a concrete next step in <strong>${Math.round(R.resolutionRate * 6)} of 6</strong> conversations.</p>
+    <p class="small">Counts combine both partners’ self-reports across all six scenarios (12 reports total). Contempt is weighted heaviest in your forecast; it is the single strongest behavioral predictor of divorce in longitudinal research.</p></div>`;
+
+  const trajLabel = { low: 'Low conflict', middle: 'Middle conflict', high: 'High conflict' }[R.trajectory];
+  const fcLabel = { stable: 'Stable', declining: 'Declining', 'at-risk': 'At-risk' }[R.forecast];
+  const fcColor = { stable: '#0F6E56', declining: '#854F0B', 'at-risk': '#A32D2D' }[R.forecast];
+  html += `<div class="card">
+    <p class="small" style="text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Your forecast</p>
+    <p class="small">Not a prediction, a probability: it shows where couples with your profile tend to land. The point of taking this now is to change the trajectory before it sets.</p>
+    <div class="row" style="margin:12px 0">
+      <div style="flex:1;background:var(--bg);border-radius:10px;padding:14px">
+        <p class="small" style="margin:0">Conflict trajectory</p>
+        <p style="font-size:20px;font-weight:600;margin:0">${trajLabel}</p>
+        <p class="small" style="margin:4px 0 0">Couples cluster into three stable 20-year conflict groups (17% low, 61% middle, 23% high), and couples rarely switch groups. Patterns set now tend to persist.</p></div>
+      <div style="flex:1;background:var(--bg);border-radius:10px;padding:14px">
+        <p class="small" style="margin:0">Satisfaction forecast</p>
+        <p style="font-size:20px;font-weight:600;margin:0;color:${fcColor}">${fcLabel}</p>
+        <p class="small" style="margin:4px 0 0">Most couples (50-90%) maintain stable satisfaction; decline is not inevitable. Your forecast reflects your current risk-vs-protective balance.</p></div>
+    </div>
+    <h3 style="margin-top:16px">Risk factors</h3>
+    ${R.risks.length ? R.risks.map(r => `<div class="alertbox" style="background:${r.level === 'red' ? 'var(--red-bg)' : 'var(--amber-bg)'}">
+      <strong style="color:${r.level === 'red' ? 'var(--red)' : 'var(--amber)'}">${r.title}</strong><br><span style="font-size:13px">${r.body}</span></div>`).join('')
+      : '<p class="small">No major risk factors flagged. Stay curious anyway; low risk is not no risk.</p>'}
+    <h3 style="margin-top:16px">Protective factors</h3>
+    ${R.protectives.map(p => `<div class="alertbox" style="background:var(--teal-bg)">
+      <strong style="color:var(--teal)">${p.title}</strong><br><span style="font-size:13px">${p.body}</span></div>`).join('')}
+  </div>`;
+
+  html += `<div class="card">
+    <p class="small" style="text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Your action plan: three moves, in order</p>
+    ${R.plan.map((a, i) => `<div style="padding:14px 0;border-bottom:${i < R.plan.length - 1 ? '1px solid var(--hair)' : 'none'}">
+      <h3 style="margin-top:0">${i + 1}. ${a.title}</h3><p style="font-size:14px;margin:0">${a.body}</p></div>`).join('')}
+    <p class="small" style="margin-top:14px"><strong>Retake in 6 months.</strong> Work the plan, then reassess. Types can shift; couples who close their gaps early tend to move toward the Builder profile.</p>
+  </div>
+
+  <div class="card" style="background:var(--bg)">
+    <p class="small" style="margin:0"><strong>Important.</strong> This is an unvalidated research prototype built on findings from published relationship science (Gottman &amp; Levenson; Karney &amp; Bradbury’s vulnerability-stress-adaptation model; Huston’s PAIR project; Olson’s ENRICH couple typology; attachment and Big Five meta-analyses). It is not a clinical instrument, not therapy, and not a verdict on your relationship. If this process surfaced something painful, a couples therapist is the right next step, and going early, before problems calcify, is what the evidence recommends. See the <a href="limitations.html">limitations page</a> for a full account of what this tool can and cannot tell you.</p>
+  </div>
+  <div class="nav no-print"><button onclick="window.print()">Print / save as PDF</button>
+  <button class="primary" onclick="if(confirm('Start over? All answers will be erased.'))location.reload()">Start over</button></div>`;
+
+  app.innerHTML = html;
+}
+
+function go(screen) { state.screen = screen; render(); }
+render();
+</script>
+</body>
+</html>
