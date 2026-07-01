@@ -5,6 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Church got there first | The Marriage Blueprint</title>
 <link rel="stylesheet" href="styles.css">
+<style>
+  .timeline { position: relative; margin-top: 40px; }
+  .timeline::before { content: ""; position: absolute; left: 19px; top: 0; bottom: 0; width: 2px; background: var(--hair); }
+  .era { position: relative; padding-left: 56px; margin-bottom: 56px; }
+  .era-dot { position: absolute; left: 8px; top: 2px; width: 24px; height: 24px; border-radius: 50%; background: var(--green-bg); border: 2px solid var(--green); }
+  .era-date { display: inline-block; font-size: 13px; font-weight: 600; color: var(--green); background: var(--green-bg); padding: 3px 12px; border-radius: 99px; margin-bottom: 8px; }
+  .era h2 { margin: 0 0 12px; }
+  .scene { background: var(--card); border: 1px solid var(--hair); border-radius: 14px; padding: 10px; margin: 0 0 16px; }
+  .scene svg { display: block; width: 100%; height: auto; border-radius: 8px; }
+  .scene figcaption { font-size: 12px; color: var(--muted); text-align: center; padding: 8px 6px 2px; }
+  .insight { background: var(--green-bg); border-radius: 10px; padding: 12px 16px; margin: 16px 0 0; }
+  .insight p { margin: 0; font-size: 14px; color: #27500A; }
+  .insight .k { font-weight: 600; color: var(--green); }
+  .lede { font-size: 17px; }
+  @media (max-width: 560px) { .era { padding-left: 44px; } }
+</style>
 </head>
 <body>
 <nav class="topnav"><div class="inner">
@@ -18,48 +34,241 @@
 
 <div class="wrap">
   <p class="small"><a href="blog.html">← Back to the blog</a></p>
-  <h1>The Church got there first: eight centuries of marriage preparation</h1>
-  <p class="muted">Long before anyone ran a longitudinal study, the Catholic Church was building systems to slow couples down before the wedding. The tools were different, but the core insight was the same one behind this project: the time to look hard at a marriage is before it starts.</p>
+  <h1>The Church got there first</h1>
+  <p class="muted lede">Eight centuries before relationship science, the Catholic Church built a system for slowing couples down before the wedding. Here is that story, one invention at a time, and what each invention quietly understood.</p>
 
-  <h2>Banns: the community as a screening instrument</h2>
-  <p>Start in 1215. The Fourth Lateran Council, one of the most consequential church councils of the Middle Ages, made the reading of marriage banns a requirement across the Latin Church. Before a couple could marry, their intention had to be announced publicly in their parish, traditionally on three successive Sundays, so that anyone who knew of an impediment could come forward.</p>
-  <p>Strip away the medieval vocabulary and look at the mechanism. The banns were a distributed background check. Is one party already married? Are the two secretly related? Is someone underage, coerced, or already promised elsewhere? No central registry existed that could answer those questions, but the parish community collectively held that information. The banns turned the community into the database.</p>
-  <p>The problem the banns attacked was clandestine marriage: couples marrying in secret, with no witnesses, sometimes discovering later that the marriage was invalid, bigamous, or contested. A secret marriage is one nobody can sanity-check. The Church's answer was structural: force the decision into daylight and give the people who know the couple a formal channel to object.</p>
+  <div class="timeline">
 
-  <h2>Trent: witnesses, form, and the end of the secret wedding</h2>
-  <p>Three and a half centuries later the Council of Trent went further. Its 1563 decree on marriage (known by its opening word, Tametsi) required that a valid marriage take place before the parish priest and witnesses. Marriage stopped being something two people could simply declare to each other in private and became a public act with a required form.</p>
-  <p>Alongside the public form, canon law developed the prenuptial investigation, which survives to this day. Before a Catholic wedding, the priest is required to establish that both parties are free to marry, that they understand what they are undertaking, and that nobody is being pressured. In practice this means a structured interview, often conducted with each party separately. Freedom of consent is checked deliberately, one person at a time, precisely because coercion hides in joint conversations.</p>
-  <p>That detail deserves attention. The insight that you learn different things when you separate the partners is the same one behind the write-alone steps in modern assessment design, including ours. The Church arrived at it through centuries of pastoral experience with forced and manipulated marriages.</p>
+    <!-- ERA 1: 1215 BANNS -->
+    <div class="era">
+      <div class="era-dot"></div>
+      <span class="era-date">1215 · Rome</span>
+      <h2>The banns: asking the whole village</h2>
+      <figure class="scene" style="margin-left:0;margin-right:0">
+        <svg viewBox="0 0 640 240" role="img" aria-label="A church door with a posted notice, and villagers gathered to read it">
+          <rect width="640" height="240" fill="#F1EFE8"/>
+          <rect x="60" y="30" width="200" height="210" fill="#E7E4D8"/>
+          <polygon points="60,30 160,-10 260,30" fill="#D3D1C7"/>
+          <rect x="130" y="110" width="60" height="130" rx="30" fill="#5F5E5A"/>
+          <rect x="130" y="180" width="60" height="60" fill="#5F5E5A"/>
+          <circle cx="160" cy="70" r="16" fill="#FAF9F5" stroke="#B4B2A9" stroke-width="3"/>
+          <rect x="205" y="120" width="44" height="58" rx="3" fill="#FAF9F5" stroke="#B4B2A9"/>
+          <line x1="212" y1="132" x2="242" y2="132" stroke="#888780" stroke-width="3"/>
+          <line x1="212" y1="142" x2="242" y2="142" stroke="#B4B2A9" stroke-width="2"/>
+          <line x1="212" y1="150" x2="236" y2="150" stroke="#B4B2A9" stroke-width="2"/>
+          <line x1="212" y1="158" x2="242" y2="158" stroke="#B4B2A9" stroke-width="2"/>
+          <line x1="212" y1="166" x2="230" y2="166" stroke="#B4B2A9" stroke-width="2"/>
+          <circle cx="330" cy="150" r="13" fill="#3B6D11"/>
+          <rect x="314" y="166" width="32" height="52" rx="14" fill="#639922"/>
+          <circle cx="385" cy="158" r="13" fill="#854F0B"/>
+          <rect x="369" y="174" width="32" height="46" rx="14" fill="#BA7517"/>
+          <circle cx="438" cy="150" r="13" fill="#185FA5"/>
+          <rect x="422" y="166" width="32" height="52" rx="14" fill="#378ADD"/>
+          <circle cx="493" cy="160" r="13" fill="#993556"/>
+          <rect x="477" y="176" width="32" height="44" rx="14" fill="#D4537E"/>
+          <path d="M470 100 q20 -18 40 0" stroke="#888780" stroke-width="2" fill="none"/>
+          <path d="M500 90 q20 -18 40 0" stroke="#B4B2A9" stroke-width="2" fill="none"/>
+        </svg>
+        <figcaption>Three Sundays in a row, the parish hears the announcement. Anyone who knows a reason can object.</figcaption>
+      </figure>
+      <p>The Fourth Lateran Council makes it law across the Latin Church: before a couple can marry, their intention must be announced publicly in their parish, traditionally on three successive Sundays. These announcements are the banns.</p>
+      <p>Why? Because the Church's biggest problem was the secret wedding. Is one party already married? Secretly related to the other? Coerced? Promised elsewhere? No registry could answer, but the village collectively knew. The banns turned the community into the database.</p>
+      <div class="insight"><p><span class="k">What it really was:</span> a distributed background check. Force the decision into daylight, and give the people who know the couple a formal channel to say what they know.</p></div>
+    </div>
 
-  <h2>The waiting period as a feature, not a nuisance</h2>
-  <p>Between the banns, the investigation, and the required form, the medieval and early modern Church had effectively built a mandatory waiting and vetting period into marriage. A couple could not simply decide on Friday and marry on Saturday. The process imposed weeks of delay by design, and the delay itself did work: impulsive matches cooled, objections surfaced, and families had time to raise concerns.</p>
-  <p>Modern dioceses have kept this instinct. Many today ask couples to begin formal preparation six months or more before the intended wedding date. Whatever one thinks of the theology, as behavioral architecture this is sound: it moves the serious examination of the relationship to a point where the couple can still act on what they find, which is the entire argument for pre-engagement assessment.</p>
+    <!-- ERA 2: 1563 TRENT -->
+    <div class="era">
+      <div class="era-dot"></div>
+      <span class="era-date">1563 · Council of Trent</span>
+      <h2>Witnesses required: the end of the secret wedding</h2>
+      <figure class="scene">
+        <svg viewBox="0 0 640 240" role="img" aria-label="A couple before a priest with two witnesses at the sides">
+          <rect width="640" height="240" fill="#FAEEDA"/>
+          <rect x="270" y="60" width="100" height="12" rx="6" fill="#BA7517"/>
+          <rect x="312" y="30" width="16" height="42" rx="4" fill="#BA7517"/>
+          <circle cx="320" cy="120" r="15" fill="#5F5E5A"/>
+          <rect x="300" y="138" width="40" height="70" rx="16" fill="#444441"/>
+          <circle cx="245" cy="132" r="14" fill="#993556"/>
+          <rect x="228" y="149" width="34" height="62" rx="15" fill="#D4537E"/>
+          <circle cx="395" cy="132" r="14" fill="#185FA5"/>
+          <rect x="378" y="149" width="34" height="62" rx="15" fill="#378ADD"/>
+          <path d="M262 175 q28 14 58 0" stroke="#712B13" stroke-width="4" fill="none"/>
+          <path d="M378 175 q-28 14 -58 0" stroke="#712B13" stroke-width="4" fill="none"/>
+          <circle cx="95" cy="145" r="12" fill="#3B6D11"/>
+          <rect x="81" y="160" width="28" height="52" rx="13" fill="#639922"/>
+          <circle cx="545" cy="145" r="12" fill="#3B6D11"/>
+          <rect x="531" y="160" width="28" height="52" rx="13" fill="#639922"/>
+          <circle cx="95" cy="105" r="20" fill="none" stroke="#639922" stroke-width="2" stroke-dasharray="4 4"/>
+          <circle cx="545" cy="105" r="20" fill="none" stroke="#639922" stroke-width="2" stroke-dasharray="4 4"/>
+          <path d="M88 105 l5 5 l10 -11" stroke="#3B6D11" stroke-width="3" fill="none"/>
+          <path d="M538 105 l5 5 l10 -11" stroke="#3B6D11" stroke-width="3" fill="none"/>
+        </svg>
+        <figcaption>Trent's Tametsi decree: no priest, no witnesses, no marriage.</figcaption>
+      </figure>
+      <p>Three and a half centuries later, the Council of Trent goes further. Its decree on marriage, known by its opening word Tametsi, rules that a valid marriage must happen before the parish priest and witnesses. Two people can no longer simply declare themselves married in private.</p>
+      <p>Marriage becomes a public act with a required form. The era of the contested, deniable, maybe-it-happened wedding is over, at least where the decree is published.</p>
+      <div class="insight"><p><span class="k">What it really was:</span> accountability by design. A commitment made in front of others is harder to deny, easier to verify, and taken more seriously by the people making it.</p></div>
+    </div>
 
-  <h2>Pre-Cana: marriage preparation becomes a curriculum</h2>
-  <p>The twentieth century turned screening into education. In the 1940s, a movement of retreats and conferences for engaged and married couples spread through the American church, taking its name from the wedding at Cana in John's gospel. Out of it grew what most American Catholics now know as Pre-Cana: structured marriage preparation covering finances, children, conflict, in-laws, faith, and expectations, delivered through parish courses, sponsor couples, or weekend retreats.</p>
-  <p>The topic list is worth noticing. Money, children, family boundaries, how you fight: Pre-Cana converged on roughly the same conversation topics that longitudinal research would later identify as the load-bearing ones. The Church got there through accumulated pastoral experience of watching marriages struggle, which is its own kind of longitudinal dataset, gathered one parish at a time.</p>
+    <!-- ERA 3: THE INTERVIEW -->
+    <div class="era">
+      <div class="era-dot"></div>
+      <span class="era-date">Canon law · still in force</span>
+      <h2>The interview: one partner at a time</h2>
+      <figure class="scene">
+        <svg viewBox="0 0 640 240" role="img" aria-label="A priest interviewing one partner while the other waits outside the room">
+          <rect width="640" height="240" fill="#E6F1FB"/>
+          <rect x="40" y="30" width="360" height="190" rx="10" fill="#FAF9F5" stroke="#B5D4F4" stroke-width="2"/>
+          <rect x="150" y="150" width="140" height="14" rx="4" fill="#85B7EB"/>
+          <rect x="160" y="164" width="10" height="46" fill="#85B7EB"/>
+          <rect x="270" y="164" width="10" height="46" fill="#85B7EB"/>
+          <circle cx="120" cy="120" r="14" fill="#5F5E5A"/>
+          <rect x="103" y="137" width="34" height="60" rx="15" fill="#444441"/>
+          <circle cx="320" cy="124" r="14" fill="#185FA5"/>
+          <rect x="303" y="141" width="34" height="58" rx="15" fill="#378ADD"/>
+          <rect x="190" y="120" width="40" height="26" rx="3" fill="#FAF9F5" stroke="#85B7EB"/>
+          <line x1="197" y1="128" x2="223" y2="128" stroke="#378ADD" stroke-width="2"/>
+          <line x1="197" y1="136" x2="217" y2="136" stroke="#B5D4F4" stroke-width="2"/>
+          <rect x="430" y="30" width="14" height="190" fill="#B5D4F4"/>
+          <circle cx="530" cy="130" r="14" fill="#993556"/>
+          <rect x="513" y="147" width="34" height="60" rx="15" fill="#D4537E"/>
+          <rect x="495" y="196" width="90" height="14" rx="7" fill="#F4C0D1"/>
+          <circle cx="565" cy="70" r="3" fill="#993556"/>
+          <circle cx="577" cy="70" r="3" fill="#993556"/>
+          <circle cx="589" cy="70" r="3" fill="#993556"/>
+        </svg>
+        <figcaption>The prenuptial inquiry: freedom of consent is checked one person at a time.</figcaption>
+      </figure>
+      <p>Alongside the public form, canon law develops something quieter: the prenuptial investigation, which survives to this day. Before a Catholic wedding, the priest must establish that both parties are free to marry, understand what they are undertaking, and are not being pressured.</p>
+      <p>The interviews are often conducted with each partner separately. Centuries of pastoral experience with forced and manipulated marriages taught the Church a hard lesson: coercion hides in joint conversations.</p>
+      <div class="insight"><p><span class="k">What it really was:</span> the write-alone protocol, centuries early. You learn different things when you separate the partners. Our assessment's solo-writing steps rest on exactly this insight.</p></div>
+    </div>
 
-  <h2>FOCCUS: the Church builds a validated instrument</h2>
-  <p>Then the Church did something surprising: it built one of the standard scientific instruments. FOCCUS (Facilitating Open Couple Communication, Understanding and Study) was developed in the 1980s at the Archdiocese of Omaha as a structured premarital inventory. Each partner responds separately to a bank of statements; the tool then maps agreements and disagreements to guide a facilitator through the couple's specific growth areas.</p>
-  <p>FOCCUS was validated psychometrically, has been through multiple editions, and published five-year follow-up research found it predicted marital outcomes for most couples at rates comparable to the leading secular instrument. It is used far beyond Catholic parishes. A tool built by a diocese for pastoral use became part of the scientific literature this project stands on.</p>
+    <!-- ERA 4: THE WAIT -->
+    <div class="era">
+      <div class="era-dot"></div>
+      <span class="era-date">Then and now</span>
+      <h2>The wait: delay as a feature</h2>
+      <figure class="scene">
+        <svg viewBox="0 0 640 240" role="img" aria-label="An hourglass beside a calendar with three Sundays marked">
+          <rect width="640" height="240" fill="#EAF3DE"/>
+          <path d="M200 50 h80 l-8 10 q-4 5 -4 12 l0 8 q0 14 -18 26 q-10 7 -10 14 q0 7 10 14 q18 12 18 26 l0 8 q0 7 4 12 l8 10 h-80 l8 -10 q4 -5 4 -12 l0 -8 q0 -14 18 -26 q10 -7 10 -14 q0 -7 -10 -14 q-18 -12 -18 -26 l0 -8 q0 -7 -4 -12 z" fill="#FAF9F5" stroke="#639922" stroke-width="3"/>
+          <path d="M222 60 h36 q-2 8 -18 18 q-16 -10 -18 -18 z" fill="#97C459"/>
+          <path d="M240 150 q16 10 18 28 h-36 q2 -18 18 -28 z" fill="#639922"/>
+          <rect x="360" y="45" width="220" height="160" rx="10" fill="#FAF9F5" stroke="#C0DD97" stroke-width="2"/>
+          <rect x="360" y="45" width="220" height="34" rx="10" fill="#639922"/>
+          <g fill="#B4B2A9">
+            <circle cx="395" cy="105" r="9"/><circle cx="431" cy="105" r="9"/><circle cx="467" cy="105" r="9"/><circle cx="503" cy="105" r="9"/>
+            <circle cx="395" cy="140" r="9"/><circle cx="431" cy="140" r="9"/><circle cx="467" cy="140" r="9"/><circle cx="503" cy="140" r="9"/>
+            <circle cx="395" cy="175" r="9"/><circle cx="431" cy="175" r="9"/><circle cx="467" cy="175" r="9"/><circle cx="503" cy="175" r="9"/>
+          </g>
+          <circle cx="539" cy="105" r="12" fill="#3B6D11"/>
+          <circle cx="539" cy="140" r="12" fill="#3B6D11"/>
+          <circle cx="539" cy="175" r="12" fill="#3B6D11"/>
+          <path d="M533 105 l4 4 l8 -9" stroke="#EAF3DE" stroke-width="3" fill="none"/>
+          <path d="M533 140 l4 4 l8 -9" stroke="#EAF3DE" stroke-width="3" fill="none"/>
+          <path d="M533 175 l4 4 l8 -9" stroke="#EAF3DE" stroke-width="3" fill="none"/>
+        </svg>
+        <figcaption>Banns, investigation, required form: weeks of built-in delay, on purpose.</figcaption>
+      </figure>
+      <p>Add it up: three Sundays of banns, an investigation, a required ceremony. A medieval couple could not decide on Friday and marry on Saturday. The delay itself did work. Impulsive matches cooled. Objections surfaced. Families had time to speak.</p>
+      <p>Modern dioceses kept the instinct: many ask couples to begin preparation six months or more before the wedding date.</p>
+      <div class="insight"><p><span class="k">What it really was:</span> moving the serious examination to the point where the couple can still act on what they find. That is the entire argument for assessing before the engagement, which is what this project is for.</p></div>
+    </div>
 
-  <h2>What the tradition understood, and what it could not see</h2>
-  <p>Eight centuries of Catholic marriage preparation encode several insights that modern research has essentially confirmed:</p>
-  <ul>
-    <li><strong>Deliberateness beats drift.</strong> Marriage is treated as a decision to be examined, not a current to be carried along by. The research version: couples who slide through relationship transitions without deciding do worse than couples who decide.</li>
-    <li><strong>Structure helps.</strong> A required process, with a facilitator and a timeline, gets couples to have conversations they would otherwise postpone indefinitely.</li>
-    <li><strong>Outside eyes catch what insiders miss.</strong> From banns to sponsor couples, the tradition never treated the couple as the only source of information about the couple.</li>
-    <li><strong>Timing matters.</strong> All of it happens before the wedding, on the theory that this is when the knowledge is still actionable.</li>
-    <li><strong>Separate the partners to get the truth.</strong> The one-at-a-time canonical interview anticipates the write-alone protocol by centuries.</li>
-  </ul>
-  <p>And there are things the tradition could not see or would not say. The historical system was built to verify validity, not compatibility: it asked whether the marriage could lawfully happen, not whether it was likely to go well. It assumed marriage was permanent regardless, so prediction was beside the point. It had no way to observe conflict behavior, no concept of attachment or of the demand/withdraw cycle, and for most of its history it treated the woman's consent as necessary while doing little about the economic coercion that made refusal unrealistic. Modern preparation, religious or secular, works with tools the tradition simply did not have.</p>
+    <!-- ERA 5: PRE-CANA -->
+    <div class="era">
+      <div class="era-dot"></div>
+      <span class="era-date">1940s · United States</span>
+      <h2>Pre-Cana: preparation becomes a curriculum</h2>
+      <figure class="scene">
+        <svg viewBox="0 0 640 240" role="img" aria-label="Couples around a table with a topics board listing money, children, in-laws, and conflict">
+          <rect width="640" height="240" fill="#FAECE7"/>
+          <rect x="60" y="40" width="220" height="130" rx="8" fill="#5F5E5A"/>
+          <rect x="60" y="40" width="220" height="130" rx="8" fill="none" stroke="#F0997B" stroke-width="4"/>
+          <text x="170" y="78" font-family="Helvetica, Arial, sans-serif" font-size="19" fill="#FAF9F5" text-anchor="middle">money</text>
+          <text x="170" y="106" font-family="Helvetica, Arial, sans-serif" font-size="19" fill="#FAF9F5" text-anchor="middle">children</text>
+          <text x="170" y="134" font-family="Helvetica, Arial, sans-serif" font-size="19" fill="#FAF9F5" text-anchor="middle">in-laws</text>
+          <text x="170" y="162" font-family="Helvetica, Arial, sans-serif" font-size="19" fill="#FAF9F5" text-anchor="middle">how you fight</text>
+          <ellipse cx="450" cy="180" rx="130" ry="26" fill="#F5C4B3"/>
+          <circle cx="375" cy="120" r="13" fill="#185FA5"/>
+          <rect x="360" y="136" width="30" height="46" rx="13" fill="#378ADD"/>
+          <circle cx="420" cy="112" r="13" fill="#993556"/>
+          <rect x="405" y="128" width="30" height="50" rx="13" fill="#D4537E"/>
+          <circle cx="480" cy="112" r="13" fill="#3B6D11"/>
+          <rect x="465" y="128" width="30" height="50" rx="13" fill="#639922"/>
+          <circle cx="525" cy="120" r="13" fill="#854F0B"/>
+          <rect x="510" y="136" width="30" height="46" rx="13" fill="#BA7517"/>
+          <rect x="428" y="170" width="14" height="10" rx="3" fill="#FAF9F5"/>
+          <rect x="458" y="170" width="14" height="10" rx="3" fill="#FAF9F5"/>
+        </svg>
+        <figcaption>The Cana movement of the 1940s turns preparation into a course: real topics, around a table.</figcaption>
+      </figure>
+      <p>The twentieth century turns screening into education. In the 1940s a movement of retreats and conferences for engaged and married couples spreads through the American church, named for the wedding at Cana. Out of it grows Pre-Cana: structured preparation covering finances, children, conflict, in-laws, faith, and expectations.</p>
+      <p>Look at that topic list again. Money. Children. Family boundaries. How you fight. Pre-Cana converged on roughly the same load-bearing conversations that longitudinal research would later confirm, and it got there through accumulated pastoral experience, one struggling marriage at a time.</p>
+      <div class="insight"><p><span class="k">What it really was:</span> a longitudinal dataset, gathered parish by parish. The Church watched thousands of marriages struggle and reverse-engineered the topics that mattered.</p></div>
+    </div>
 
-  <h2>The lineage</h2>
-  <p>It is easy to present relationship science as a break with the past: finally, data instead of doctrine. The honest story is more like a relay. The Church established that marriage deserves a formal examination period, built the social machinery to enforce one, converged on the right conversation topics through sheer pastoral repetition, and eventually produced a validated instrument of its own. Longitudinal research then added what tradition could not: behavioral prediction, measured outcomes, and a way to test which parts of the received wisdom were actually true.</p>
-  <p>This project sits in that lineage, on the scientific side of the relay, and borrows the tradition's best structural idea without requiring any of its theology: look hard, look early, look together and separately, and let someone outside the couple help you see.</p>
+    <!-- ERA 6: FOCCUS -->
+    <div class="era">
+      <div class="era-dot"></div>
+      <span class="era-date">1980s · Omaha</span>
+      <h2>FOCCUS: the Church builds a validated instrument</h2>
+      <figure class="scene">
+        <svg viewBox="0 0 640 240" role="img" aria-label="A two-column inventory form with matched and mismatched answers highlighted">
+          <rect width="640" height="240" fill="#EEEDFE"/>
+          <rect x="150" y="25" width="340" height="195" rx="10" fill="#FAF9F5" stroke="#CECBF6" stroke-width="2"/>
+          <rect x="150" y="25" width="340" height="38" rx="10" fill="#7F77DD"/>
+          <text x="320" y="50" font-family="Helvetica, Arial, sans-serif" font-size="17" fill="#FAF9F5" text-anchor="middle">partner A · partner B</text>
+          <g>
+            <line x1="175" y1="90" x2="330" y2="90" stroke="#CECBF6" stroke-width="4"/>
+            <circle cx="390" cy="90" r="10" fill="#3B6D11"/><circle cx="440" cy="90" r="10" fill="#3B6D11"/>
+            <line x1="175" y1="125" x2="315" y2="125" stroke="#CECBF6" stroke-width="4"/>
+            <circle cx="390" cy="125" r="10" fill="#3B6D11"/><circle cx="440" cy="125" r="10" fill="#3B6D11"/>
+            <line x1="175" y1="160" x2="340" y2="160" stroke="#CECBF6" stroke-width="4"/>
+            <circle cx="390" cy="160" r="10" fill="#3B6D11"/><circle cx="440" cy="160" r="10" fill="#E24B4A"/>
+            <line x1="175" y1="195" x2="320" y2="195" stroke="#CECBF6" stroke-width="4"/>
+            <circle cx="390" cy="195" r="10" fill="#E24B4A"/><circle cx="440" cy="195" r="10" fill="#3B6D11"/>
+          </g>
+          <rect x="372" y="145" width="88" height="30" rx="15" fill="none" stroke="#E24B4A" stroke-width="2" stroke-dasharray="5 4"/>
+        </svg>
+        <figcaption>Each partner answers separately; the disagreements become the conversation map.</figcaption>
+      </figure>
+      <p>Then the Church does something surprising: it builds one of the standard scientific instruments. FOCCUS (Facilitating Open Couple Communication, Understanding and Study) is developed in the 1980s at the Archdiocese of Omaha. Each partner responds separately to a bank of statements; the tool maps where they agree and disagree, and a facilitator works through the gaps.</p>
+      <p>FOCCUS was validated psychometrically, and published five-year follow-up research found it predicted marital outcomes for most couples at rates comparable to the leading secular instrument. A tool built by a diocese for pastoral use became part of the scientific literature this project stands on.</p>
+      <div class="insight"><p><span class="k">What it really was:</span> the bridge. Eight centuries of pastoral practice, formalized into an instrument that science could test, and did.</p></div>
+    </div>
 
-  <div class="card" style="background:var(--bg);margin-top:32px">
-    <p class="small" style="margin:0"><strong>A note on sources.</strong> The load-bearing historical claims here (the Fourth Lateran Council's banns requirement of 1215, Trent's Tametsi decree of 1563, the canonical prenuptial investigation, the mid-century origins of Pre-Cana, and the development and validation of FOCCUS in Omaha) are well documented. Interpretations of why these mechanisms worked are ours. For the FOCCUS validation research, see the source list on the <a href="methodology.html">methodology page</a>.</p>
+    <!-- ERA 7: NOW -->
+    <div class="era">
+      <div class="era-dot"></div>
+      <span class="era-date">Now</span>
+      <h2>The relay</h2>
+      <figure class="scene">
+        <svg viewBox="0 0 640 240" role="img" aria-label="A church shape passing forward to a chart, connected by an arrow">
+          <rect width="640" height="240" fill="#E1F5EE"/>
+          <rect x="90" y="90" width="120" height="110" fill="#9FE1CB"/>
+          <polygon points="90,90 150,55 210,90" fill="#5DCAA5"/>
+          <rect x="135" y="150" width="30" height="50" rx="12" fill="#0F6E56"/>
+          <path d="M250 140 h120" stroke="#0F6E56" stroke-width="5" stroke-linecap="round"/>
+          <path d="M355 125 l22 15 l-22 15" fill="none" stroke="#0F6E56" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="410" y="70" width="150" height="130" rx="10" fill="#FAF9F5" stroke="#9FE1CB" stroke-width="2"/>
+          <rect x="428" y="150" width="22" height="34" rx="4" fill="#5DCAA5"/>
+          <rect x="458" y="125" width="22" height="59" rx="4" fill="#1D9E75"/>
+          <rect x="488" y="105" width="22" height="79" rx="4" fill="#0F6E56"/>
+          <rect x="518" y="90" width="22" height="94" rx="4" fill="#085041"/>
+        </svg>
+        <figcaption>Not a break with the past. A relay: the tradition built the structure, the science tests what works.</figcaption>
+      </figure>
+      <p>It is tempting to tell this as a story of science replacing doctrine. The honest version is a relay. The Church established that a marriage deserves a formal examination period, built the machinery to enforce one, converged on the right conversation topics through sheer repetition, and finally produced a validated instrument of its own.</p>
+      <p>Longitudinal research then added what tradition could not see: behavioral prediction, measured outcomes, attachment, the demand/withdraw cycle, and a way to test which parts of the received wisdom were actually true. The tradition also had real blind spots: it screened for whether a marriage could lawfully happen, not whether it was likely to go well, and for most of its history it did little about the economic coercion that made a woman's refusal unrealistic.</p>
+      <div class="insight"><p><span class="k">Where this project sits:</span> the scientific side of the relay, borrowing the tradition's best structural idea without requiring its theology. Look hard, look early, look together and separately, and let something outside the couple help you see.</p></div>
+    </div>
+
+  </div>
+
+  <div class="card" style="background:var(--bg)">
+    <p class="small" style="margin:0"><strong>A note on sources.</strong> The load-bearing historical claims (the Fourth Lateran Council's banns requirement of 1215, Trent's Tametsi decree of 1563, the canonical prenuptial investigation, the mid-century origins of Pre-Cana, and the development and validation of FOCCUS in Omaha) are well documented. Interpretations of why these mechanisms worked are ours. For the FOCCUS validation research, see the source list on the <a href="methodology.html">methodology page</a>.</p>
   </div>
 
   <p style="margin:32px 0"><a class="btn primary" href="test.html">Take the assessment</a>&nbsp;&nbsp;<a class="btn" href="blog-history-of-marriage.html">Next: a short history of marriage</a></p>
