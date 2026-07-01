@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ENCORE | The weekend you return to</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Caveat:wght@500&family=Space+Grotesk:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F2EDE0; --card: #FAF7EC; --ink: #211E19; --faded: #6E675B;
+    --sea: #4E8FB0; --sea-deep: #2F6A8C; --sky: #A8CBDD; --rock: #8B7B66;
+    --hand: #3D5FA8; --stamp-red: #B3492F; --hair: #D8D1BF;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Space Grotesk", Helvetica, sans-serif; line-height: 1.6; }
+  body::after { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: 0.5; z-index: 999;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.35 0 0 0 0 0.32 0 0 0 0 0.26 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23g)'/%3E%3C/svg%3E"); }
+  .shell { max-width: 760px; margin: 0 auto; padding: 48px 20px 90px; }
+  .kicker { font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--faded); text-align: center; margin-bottom: 20px; }
+
+  .postcard { background: var(--card); border: 1px solid var(--hair); box-shadow: 0 6px 30px rgba(60,50,30,0.18), 0 1px 3px rgba(60,50,30,0.12); }
+  .pc-photo { display: block; width: 100%; height: auto; }
+  .pc-back { padding: 34px 36px 30px; position: relative; }
+  .brand { font-family: "Playfair Display", Georgia, serif; font-weight: 700; font-size: clamp(44px, 9vw, 72px); letter-spacing: 2px; line-height: 0.95; margin: 0; transform: scaleX(0.82); transform-origin: left; }
+  .pc-columns { display: grid; grid-template-columns: 1.25fr 1px 0.9fr; gap: 28px; margin-top: 18px; }
+  .pc-divider { background: var(--ink); opacity: 0.75; }
+  .hand { font-family: "Caveat", cursive; color: var(--hand); font-size: clamp(26px, 4.5vw, 34px); line-height: 1.25; margin: 18px 0 0; transform: rotate(-2deg); }
+  .addr { margin-top: 56px; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; font-weight: 500; }
+  .addr span { display: block; color: var(--faded); }
+  .stamp { width: 92px; height: 112px; margin-left: auto; border: 2px dotted var(--faded); display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px; }
+  .stamp p { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--faded); margin: 0; }
+  .pc-lines { margin-top: 40px; }
+  .pc-lines div { border-bottom: 1px solid var(--hair); height: 34px; }
+  .ch { position: absolute; bottom: 10px; left: 36px; font-size: 11px; color: var(--faded); letter-spacing: 1px; }
+
+  h2 { font-family: "Playfair Display", Georgia, serif; font-weight: 700; font-size: 30px; margin: 70px 0 8px; letter-spacing: 0.5px; }
+  .sub { color: var(--faded); font-size: 15px; margin: 0 0 26px; }
+  p { font-size: 15px; }
+
+  .itin { border-top: 1px solid var(--ink); }
+  .itin-row { display: grid; grid-template-columns: 150px 1fr; gap: 18px; padding: 18px 4px; border-bottom: 1px solid var(--hair); }
+  .itin-row b { font-family: "Playfair Display", Georgia, serif; font-size: 17px; font-weight: 700; }
+  .itin-row span { display: block; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--stamp-red); margin-top: 2px; }
+  .itin-row p { margin: 0; font-size: 15px; }
+
+  .includes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1px; background: var(--hair); border: 1px solid var(--hair); }
+  .inc { background: var(--card); padding: 22px 20px; }
+  .inc b { font-family: "Playfair Display", Georgia, serif; font-size: 18px; font-weight: 700; display: block; margin-bottom: 6px; }
+  .inc p { margin: 0; font-size: 14px; color: var(--faded); }
+
+  .dests { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
+  .dest { background: var(--card); border: 1px solid var(--hair); padding: 8px 8px 12px; box-shadow: 0 3px 14px rgba(60,50,30,0.12); transform: rotate(-1.2deg); }
+  .dest:nth-child(2) { transform: rotate(1.4deg); }
+  .dest:nth-child(3) { transform: rotate(-0.8deg); }
+  .dest:nth-child(4) { transform: rotate(1deg); }
+  .dest svg { display: block; width: 100%; height: auto; }
+  .dest b { font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; display: block; margin: 10px 4px 0; }
+  .dest i { font-family: "Caveat", cursive; font-style: normal; color: var(--hand); font-size: 18px; display: block; margin: 0 4px; }
+
+  form { background: var(--card); border: 1px solid var(--hair); box-shadow: 0 6px 30px rgba(60,50,30,0.15); padding: 34px 36px; }
+  label { display: block; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--faded); margin: 22px 0 8px; }
+  input[type=text], input[type=email], select { width: 100%; font-family: "Space Grotesk", sans-serif; font-size: 16px; padding: 12px 14px; border: 1px solid var(--hair); background: #FFFDF6; color: var(--ink); border-radius: 0; }
+  input:focus, select:focus { outline: 2px solid var(--sea); }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chips label { margin: 0; }
+  .chip input { display: none; }
+  .chip span { display: inline-block; font-size: 14px; letter-spacing: 0.5px; text-transform: none; padding: 10px 18px; border: 1px solid var(--ink); cursor: pointer; color: var(--ink); }
+  .chip input:checked + span { background: var(--ink); color: var(--card); }
+  .stars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .stars label { margin: 0; }
+  .star-opt input { display: none; }
+  .star-opt div { border: 1px solid var(--ink); padding: 14px 10px; text-align: center; cursor: pointer; }
+  .star-opt b { font-family: "Playfair Display", Georgia, serif; font-size: 18px; display: block; }
+  .star-opt small { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--faded); }
+  .star-opt input:checked + div { background: var(--ink); }
+  .star-opt input:checked + div b { color: var(--card); }
+  .star-opt input:checked + div small { color: var(--hair); }
+  button { margin-top: 30px; width: 100%; font-family: "Space Grotesk", sans-serif; font-size: 14px; letter-spacing: 3px; text-transform: uppercase; font-weight: 500; padding: 18px; background: var(--ink); color: var(--card); border: none; cursor: pointer; }
+  button:hover { background: #3a352c; }
+  .fine { font-size: 12px; color: var(--faded); margin-top: 14px; text-align: center; }
+  .success { display: none; text-align: center; padding: 40px 20px; }
+  .success .hand { transform: none; font-size: 30px; }
+  .footer { margin-top: 80px; text-align: center; font-size: 12px; color: var(--faded); letter-spacing: 1px; }
+  @media (max-width: 560px) { .pc-columns { grid-template-columns: 1fr; } .pc-divider { display: none; } .stamp { margin: 0 0 0 auto; } .pc-back { padding: 26px 22px; } form { padding: 26px 20px; } }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <p class="kicker">Now forming the first departures</p>
+
+  <!-- THE POSTCARD -->
+  <div class="postcard">
+    <svg class="pc-photo" viewBox="0 0 720 400" role="img" aria-label="Vintage postcard photograph of sea rocks and surf under a pale summer sky">
+      <defs>
+        <filter id="wob" x="-3%" y="-3%" width="106%" height="106%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="2" seed="11" result="n"/>
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="7"/>
+        </filter>
+        <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" seed="5"/><feColorMatrix type="matrix" values="0 0 0 0 0.3 0 0 0 0 0.32 0 0 0 0 0.3 0 0 0 0.07 0"/></filter>
+        <linearGradient id="skyg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#9FC4D8"/><stop offset="1" stop-color="#C4DBE6"/>
+        </linearGradient>
+        <linearGradient id="seag" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#3E7FA0"/><stop offset="1" stop-color="#2F6A8C"/>
+        </linearGradient>
+      </defs>
+      <rect width="720" height="400" fill="url(#skyg)"/>
+      <g filter="url(#wob)">
+        <rect x="0" y="188" width="720" height="212" fill="url(#seag)"/>
+        <path d="M0 196 Q 180 188 360 194 T 720 192 L 720 206 Q 540 212 360 206 T 0 210 Z" fill="#5E9BB8" opacity="0.7"/>
+        <path d="M0 250 Q 200 242 420 250 T 720 246 L 720 258 Q 500 266 300 258 T 0 262 Z" fill="#4A87A6" opacity="0.6"/>
+        <path d="M300 118 Q 320 84 356 78 Q 402 70 430 96 Q 458 118 452 156 Q 470 160 480 176 Q 490 194 480 210 L 292 210 Q 278 186 288 160 Q 294 134 300 118 Z" fill="#8B7B66"/>
+        <path d="M310 122 Q 330 92 360 86 Q 348 118 344 152 Q 340 182 344 208 L 296 208 Q 284 184 292 158 Q 300 134 310 122 Z" fill="#A6947C" opacity="0.85"/>
+        <path d="M356 78 Q 402 70 430 96 Q 448 112 452 140 Q 420 122 388 118 Q 366 100 356 78 Z" fill="#6E6152" opacity="0.8"/>
+        <path d="M490 172 Q 520 150 560 156 Q 600 160 618 184 Q 634 202 626 216 L 486 216 Q 476 192 490 172 Z" fill="#5C5244"/>
+        <path d="M498 176 Q 522 158 552 160 Q 540 184 538 212 L 490 212 Q 484 192 498 176 Z" fill="#77685A" opacity="0.9"/>
+        <ellipse cx="560" cy="182" rx="14" ry="5" fill="#B98E5F" opacity="0.9"/>
+        <ellipse cx="588" cy="192" rx="12" ry="4.6" fill="#A87D50" opacity="0.9"/>
+        <ellipse cx="540" cy="196" rx="13" ry="5" fill="#C29B6C" opacity="0.9"/>
+        <ellipse cx="566" cy="202" rx="15" ry="5.4" fill="#9A7248" opacity="0.9"/>
+        <path d="M160 236 Q 130 226 96 232 Q 70 236 60 250 Q 52 262 62 270 L 168 270 Q 176 250 160 236 Z" fill="#6E6152"/>
+        <path d="M250 216 L 720 216 L 720 232 Q 560 240 420 232 Q 320 228 250 230 Z" fill="#EDF3F2" opacity="0.75"/>
+        <path d="M60 272 L 260 272 Q 240 284 200 286 Q 130 290 60 282 Z" fill="#EDF3F2" opacity="0.7"/>
+        <path d="M0 306 Q 180 296 400 306 T 720 302 L 720 322 Q 520 330 320 322 T 0 328 Z" fill="#3E7FA0" opacity="0.55"/>
+        <path d="M0 344 Q 240 336 480 344 T 720 340 L 720 400 L 0 400 Z" fill="#2A5F7E" opacity="0.7"/>
+        <path d="M300 214 Q 360 224 460 218 Q 470 226 452 232 Q 360 240 292 228 Q 288 218 300 214 Z" fill="#F2F7F5" opacity="0.85"/>
+      </g>
+      <rect width="720" height="400" filter="url(#grain)"/>
+    </svg>
+
+    <div class="pc-back">
+      <h1 class="brand">ENCORE</h1>
+      <div class="pc-columns">
+        <div>
+          <p class="hand">for those who invest<br>in us,<br>not just the wedding</p>
+          <div class="addr">
+            <span>(Deux)</span>
+            One weekend<br>Every year<br>Just the two of you
+          </div>
+        </div>
+        <div class="pc-divider"></div>
+        <div>
+          <div class="stamp"><p>Place<br>your<br>names<br>here</p></div>
+          <div class="pc-lines"><div></div><div></div><div></div></div>
+        </div>
+      </div>
+      <span class="ch">EN-01</span>
+    </div>
+  </div>
+
+  <!-- WHAT IT IS -->
+  <h2>A standing reservation for your relationship</h2>
+  <p class="sub">Two nights. One coach. Zero obligations to anyone but each other.</p>
+  <p>Encore is an elevated weekend for two, built around one idea: the strongest couples do not wait for something to be wrong. You arrive Friday evening, you leave Sunday afternoon, and in between there is exactly one working session, a private workshop guided by one of our instructor coaches, woven into a weekend that otherwise looks and feels like the best short holiday you have taken together.</p>
+  <p>No group circles. No sharing with strangers. Every conversation that matters happens between the two of you, behind your own door.</p>
+
+  <!-- THE SHAPE OF IT -->
+  <h2>The shape of the weekend</h2>
+  <p class="sub">Held the same way, every year. That is the point.</p>
+  <div class="itin">
+    <div class="itin-row">
+      <div><b>Friday</b><span>Arrive by 6pm</span></div>
+      <p>Check in, drop your bags, drop your phones if you like. Aperitivo and a long dinner for two. The weekend seals itself around you. No work tonight.</p>
+    </div>
+    <div class="itin-row">
+      <div><b>Saturday</b><span>The heart of it</span></div>
+      <p>Morning: your private workshop, 90 focused minutes with your coach, shaped by a short questionnaire you each answered before arriving. Afternoon: massage day. Spa, sun, silence. Evening: the signature dinner, with one beautiful question on the menu.</p>
+    </div>
+    <div class="itin-row">
+      <div><b>Sunday</b><span>Depart by 4pm</span></div>
+      <p>Slow breakfast. A short closing session where the weekend becomes three commitments for the year ahead. Then the coast road home, and a standing reservation for next year if you want it.</p>
+    </div>
+  </div>
+
+  <!-- INCLUDED -->
+  <h2>Included, always</h2>
+  <p class="sub">The full weekend, one price, nothing to arrange.</p>
+  <div class="includes">
+    <div class="inc"><b>Two nights</b><p>At a hotel matched to the tier you choose. Never a conference hotel. Never a ballroom.</p></div>
+    <div class="inc"><b>Massage day</b><p>A full spa afternoon for two, booked and timed so you never queue for anything.</p></div>
+    <div class="inc"><b>The workshop</b><p>Private, 90 minutes, one couple and one instructor coach. Prepared from your answers, personal to you two.</p></div>
+    <div class="inc"><b>The dinner</b><p>Saturday's signature dinner for two, the best table we can get in town.</p></div>
+  </div>
+
+  <!-- DESTINATIONS -->
+  <h2>Pick your postcard</h2>
+  <p class="sub">First departures are planned for four coasts. Tell us which one is yours.</p>
+  <div class="dests">
+    <div class="dest">
+      <svg viewBox="0 0 200 130"><rect width="200" height="130" fill="#BFD8E4"/><rect y="70" width="200" height="60" fill="#3E7FA0"/><path d="M0 74 Q 100 68 200 72 L 200 82 Q 100 88 0 84 Z" fill="#EDF3F2" opacity="0.6"/><path d="M150 70 q0 -34 6 -46 q6 12 6 46 Z" fill="#5F7F4A"/><path d="M156 22 q-14 -8 -24 -2 M156 22 q14 -6 22 4 M156 22 q-2 -14 -12 -18" stroke="#5F7F4A" stroke-width="4" fill="none"/><rect x="30" y="52" width="44" height="18" fill="#F2E8D0"/><path d="M26 52 L 52 40 L 78 52 Z" fill="#C96F4A"/></svg>
+      <b>Antibes</b><i>the riviera one</i>
+    </div>
+    <div class="dest">
+      <svg viewBox="0 0 200 130"><rect width="200" height="130" fill="#AFC9D8"/><rect y="78" width="200" height="52" fill="#2F6A8C"/><path d="M0 130 L 0 60 Q 40 34 78 52 Q 110 66 118 92 L 96 130 Z" fill="#6E6152"/><path d="M0 130 L 0 78 Q 36 58 66 74 Q 90 86 96 106 L 84 130 Z" fill="#5A7A50" opacity="0.85"/><path d="M118 96 Q 160 92 200 96 L 200 104 Q 160 110 118 104 Z" fill="#EDF3F2" opacity="0.6"/></svg>
+      <b>Big Sur</b><i>the dramatic one</i>
+    </div>
+    <div class="dest">
+      <svg viewBox="0 0 200 130"><rect width="200" height="130" fill="#CBDEE6"/><rect y="84" width="200" height="46" fill="#4E8FB0"/><rect y="70" width="200" height="16" fill="#E8DDBE"/><path d="M40 70 q0 -26 5 -36 q5 10 5 36 Z" fill="#7A9A62"/><path d="M45 32 q-12 -8 -20 -2 M45 32 q12 -6 20 2 M45 32 q0 -12 -8 -16" stroke="#7A9A62" stroke-width="3.4" fill="none"/><rect x="120" y="50" width="36" height="20" fill="#F5F1E4"/><rect x="120" y="46" width="36" height="6" fill="#C96F4A"/></svg>
+      <b>Comporta</b><i>the quiet one</i>
+    </div>
+    <div class="dest">
+      <svg viewBox="0 0 200 130"><rect width="200" height="130" fill="#B8D2DE"/><rect y="88" width="200" height="42" fill="#39789A"/><path d="M20 88 L 20 40 L 44 40 L 44 88 Z" fill="#F2E8D0"/><path d="M50 88 L 50 30 L 72 30 L 72 88 Z" fill="#E8D8B8"/><path d="M78 88 L 78 46 L 100 46 L 100 88 Z" fill="#F2E8D0"/><g fill="#4E8FB0" opacity="0.9"><rect x="26" y="48" width="8" height="10"/><rect x="26" y="66" width="8" height="10"/><rect x="56" y="38" width="8" height="10"/><rect x="56" y="56" width="8" height="10"/><rect x="84" y="54" width="8" height="10"/><rect x="84" y="70" width="8" height="10"/></g><path d="M130 88 q0 -30 5 -40 q5 10 5 40 Z" fill="#5F7F4A"/><path d="M135 44 q-12 -8 -20 -2 M135 44 q12 -6 20 2" stroke="#5F7F4A" stroke-width="3.4" fill="none"/></svg>
+      <b>Amalfi</b><i>the golden one</i>
+    </div>
+  </div>
+
+  <!-- WAITLIST -->
+  <h2 id="waitlist">Join the waitlist</h2>
+  <p class="sub">First departures fill by invitation, in order of the list. Pricing is shared with the list first.</p>
+
+  <form id="wl-form">
+    <label for="names">Your first names</label>
+    <input type="text" id="names" name="names" placeholder="e.g. Selin & Alex" required>
+
+    <label for="email">Email</label>
+    <input type="email" id="email" name="email" placeholder="you@example.com" required>
+
+    <label>Pick your destination</label>
+    <div class="chips">
+      <label class="chip"><input type="radio" name="destination" value="Antibes" required><span>Antibes</span></label>
+      <label class="chip"><input type="radio" name="destination" value="Big Sur"><span>Big Sur</span></label>
+      <label class="chip"><input type="radio" name="destination" value="Comporta"><span>Comporta</span></label>
+      <label class="chip"><input type="radio" name="destination" value="Amalfi"><span>Amalfi</span></label>
+      <label class="chip"><input type="radio" name="destination" value="Surprise us"><span>Surprise us</span></label>
+    </div>
+
+    <label>Your hotel, honestly</label>
+    <div class="stars">
+      <label class="star-opt"><input type="radio" name="tier" value="3-star" required><div><b>★★★</b><small>Charming</small></div></label>
+      <label class="star-opt"><input type="radio" name="tier" value="4-star"><div><b>★★★★</b><small>Elevated</small></div></label>
+      <label class="star-opt"><input type="radio" name="tier" value="5-star"><div><b>★★★★★</b><small>No notes</small></div></label>
+    </div>
+
+    <label>What do you care about most? Pick up to two</label>
+    <div class="chips" id="care-chips">
+      <label class="chip"><input type="checkbox" name="care" value="The food"><span>The food</span></label>
+      <label class="chip"><input type="checkbox" name="care" value="The spa"><span>The spa</span></label>
+      <label class="chip"><input type="checkbox" name="care" value="The coach"><span>The coach</span></label>
+      <label class="chip"><input type="checkbox" name="care" value="The room"><span>The room</span></label>
+      <label class="chip"><input type="checkbox" name="care" value="Total privacy"><span>Total privacy</span></label>
+    </div>
+
+    <button type="submit">Put us on the list</button>
+    <p class="fine">Arrive Friday by 6pm, depart Sunday by 4pm. Two nights, massage day, private workshop, signature dinner. All included.</p>
+  </form>
+
+  <div class="success" id="wl-success">
+    <p class="hand">you're on the list.</p>
+    <p class="sub">We will write to you the way we do everything else here: rarely, and worth opening.</p>
+  </div>
+
+  <div class="footer">
+    <p>ENCORE · A standing reservation for your relationship<br>An experiment by the team behind <a href="../index.html" style="color:var(--faded)">The Marriage Blueprint</a></p>
+  </div>
+
+</div>
+
+<script>
+// Waitlist submission. Set FORM_ENDPOINT to a Formspree (or similar) endpoint
+// to collect real signups, e.g. "https://formspree.io/f/yourFormId".
+const FORM_ENDPOINT = "";
+
+const form = document.getElementById('wl-form');
+
+// Limit "care about" to two picks
+document.getElementById('care-chips').addEventListener('change', () => {
+  const boxes = document.querySelectorAll('#care-chips input');
+  const checked = Array.from(boxes).filter(b => b.checked);
+  boxes.forEach(b => b.disabled = !b.checked && checked.length >= 2);
+});
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(form).entries());
+  data.care = Array.from(document.querySelectorAll('#care-chips input:checked')).map(b => b.value).join(', ');
+  if (FORM_ENDPOINT) {
+    try {
+      await fetch(FORM_ENDPOINT, { method: 'POST', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    } catch (err) { /* still show success; the list is best-effort in demo mode */ }
+  } else {
+    const list = JSON.parse(localStorage.getItem('encore-waitlist') || '[]');
+    list.push(data);
+    localStorage.setItem('encore-waitlist', JSON.stringify(list));
+  }
+  form.style.display = 'none';
+  document.getElementById('wl-success').style.display = 'block';
+});
+</script>
+</body>
+</html>
