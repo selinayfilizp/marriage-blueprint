@@ -5,24 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Take the test | The Marriage Blueprint</title>
 <link rel="stylesheet" href="styles.css">
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   .likert { display: flex; gap: 6px; margin: 8px 0 4px; }
-  .likert label { flex: 1; text-align: center; border: 1px solid var(--hair); border-radius: 8px; padding: 8px 4px; font-size: 12px; cursor: pointer; background: var(--card); color: var(--muted); }
+  .likert label { flex: 1; text-align: center; border: 1px solid var(--hair); border-radius: 8px; padding: 10px 4px; font-size: 12px; cursor: pointer; background: var(--card); color: var(--muted); }
   .likert input { display: none; }
   .likert label:has(input:checked) { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .likert .lk-num { display: none; font-size: 15px; font-weight: 600; }
   .item { padding: 14px 0; border-bottom: 1px solid var(--hair); }
   .item:last-child { border-bottom: none; }
   .item p { margin: 0 0 4px; font-size: 15px; }
-  textarea { width: 100%; font: inherit; font-size: 14px; padding: 12px; border: 1px solid var(--hair); border-radius: 10px; min-height: 110px; resize: vertical; background: var(--card); }
-  select, input[type=text] { font: inherit; padding: 8px 12px; border: 1px solid var(--hair); border-radius: 8px; background: var(--card); width: 100%; }
+  textarea { width: 100%; font: inherit; font-size: 16px; padding: 12px; border: 1px solid var(--hair); border-radius: 10px; min-height: 130px; resize: vertical; background: var(--card); }
+  select, input[type=text] { font: inherit; font-size: 16px; padding: 10px 12px; border: 1px solid var(--hair); border-radius: 8px; background: var(--card); width: 100%; }
   .row { display: flex; gap: 12px; }
   .row > div { flex: 1; }
-  .nav { display: flex; justify-content: space-between; margin-top: 20px; }
-  .progress { height: 4px; background: var(--hair); border-radius: 2px; margin-bottom: 24px; }
+  .nav { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
+  .progress { height: 4px; background: var(--hair); border-radius: 2px; margin-bottom: 6px; }
   .progress div { height: 100%; background: var(--ink); border-radius: 2px; transition: width 0.3s; }
+  .progress.partner div { background: #1D9E75; }
   .badge-a { background: var(--purple-bg); color: var(--purple); }
   .badge-b { background: var(--teal-bg); color: var(--teal); }
-  .checkgrid label { display: flex; gap: 10px; align-items: flex-start; padding: 9px 12px; border: 1px solid var(--hair); border-radius: 8px; margin-bottom: 8px; font-size: 14px; cursor: pointer; }
+  .checkgrid label { display: flex; gap: 10px; align-items: flex-start; padding: 11px 12px; border: 1px solid var(--hair); border-radius: 8px; margin-bottom: 8px; font-size: 14px; cursor: pointer; }
   .checkgrid label:has(input:checked) { background: var(--blue-bg); border-color: var(--blue); }
   .checkgrid input { margin-top: 4px; }
   .dimrow { display: grid; grid-template-columns: 150px 1fr 64px; gap: 12px; align-items: center; padding: 8px 0; }
@@ -32,7 +36,27 @@
   .gapband { position: absolute; top: 7px; height: 12px; border-radius: 3px; }
   .alertbox { border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; font-size: 14px; }
   .center { text-align: center; }
-  @media print { button, .nav, .progress, .topnav { display: none !important; } body { background: #fff; } }
+  .codebox { font-size: 34px; letter-spacing: 10px; font-weight: 600; text-align: center; padding: 14px 0 14px 10px; background: var(--bg); border-radius: 12px; margin: 12px 0; }
+  #qr { display: flex; justify-content: center; margin: 16px 0; }
+  #qr img, #qr canvas { border: 10px solid #fff; border-radius: 8px; }
+  .pulse { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--green); margin-right: 8px; animation: pu 1.2s infinite; vertical-align: 1px; }
+  @keyframes pu { 0%,100% { opacity: 0.35 } 50% { opacity: 1 } }
+  .modecard { cursor: pointer; transition: border-color 0.15s; }
+  .modecard:hover { border-color: var(--green); }
+  .banner { background: var(--red-bg); color: var(--red); border-radius: 10px; padding: 10px 16px; font-size: 14px; margin-bottom: 14px; }
+  .partnerbar { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+  .partnerbar .progress { flex: 1; margin: 0; }
+  @media (max-width: 620px) {
+    .row { flex-direction: column; }
+    .likert { gap: 4px; }
+    .likert label { padding: 12px 2px; }
+    .likert .lk-word { display: none; }
+    .likert .lk-num { display: block; }
+    .dimrow { grid-template-columns: 105px 1fr 54px; gap: 8px; }
+    .codebox { font-size: 26px; letter-spacing: 7px; }
+    h1 { font-size: 24px; }
+  }
+  @media print { button, .nav, .progress, .topnav, .partnerbar { display: none !important; } body { background: #fff; } }
 </style>
 </head>
 <body>
@@ -48,10 +72,10 @@
 
 <script>
 /* =====================================================================
-   THE MARRIAGE BLUEPRINT, v0.1 (research prototype)
-   Three-layer assessment based on the vulnerability-stress-adaptation
-   model (Karney & Bradbury, 1995). See the Methodology page for the
-   research basis of every dimension, item, weight, and rule.
+   THE MARRIAGE BLUEPRINT, v0.2 (research prototype)
+   Two-phone paired sessions (peer-to-peer, nothing stored on a server)
+   plus a single-device fallback. Assessment model unchanged: see the
+   Methodology page for the research basis of every dimension and rule.
    ===================================================================== */
 
 const DIMENSIONS = [
@@ -138,37 +162,37 @@ const DIMENSIONS = [
 ];
 
 const SCENARIOS = [
-  { key: 'money', name: 'The money fork', initiator: 'A',
+  { key: 'money', name: 'The money fork',
     prompt: 'You have been saving together for a shared goal and you are about 60% of the way there. Your partner comes home and tells you their sibling is in serious financial trouble, and asks whether you would be willing to lend the sibling roughly half of what you have saved. Your partner clearly feels strongly about helping. What do you say?',
     talk: [ 'Read each other’s written responses aloud. No reacting yet.',
       'Each of you: “What was your gut reaction when you read my response?”',
       'Together: “Is there a version of this where we both feel respected?”',
       'Each of you: “What did your partner’s response reveal about what matters to them?”' ] },
-  { key: 'values', name: 'The values collision', initiator: 'B',
+  { key: 'values', name: 'The values collision',
     prompt: 'A close friend invites you both to an event that one of you finds meaningful and the other finds deeply uncomfortable. Not dangerous, but in conflict with something they value or believe. Your partner says they do not want to go, and would prefer you did not go either. You really want to go. What happens next?',
     talk: [ '“What does this event represent to you? Not logistically, but identity-wise.”',
       '“When you imagine your partner going without you (or you not going), what feeling comes up?”',
       '“Is this a situation where compromise works, or does one person need to yield? How do we decide who?”',
       '“Has something like this happened before between us? How did it go?”' ] },
-  { key: 'boundary', name: 'The boundary test', initiator: 'A',
+  { key: 'boundary', name: 'The boundary test',
     prompt: 'Your partner’s parent has a pattern of subtle criticism toward you: about your career, your cooking, or how you keep your home. You have mentioned it to your partner twice. They said they would talk to their parent, but nothing changed. It happens again at a family dinner. What do you do, both in the moment and afterward with your partner?',
     talk: [ 'Partner whose parent it is: “What makes it hard to set this boundary?”',
       'Partner being criticized: “What does it feel like when nothing changes after you have raised it?”',
       '“What would having each other’s back look like here, specifically?”',
       '“If this pattern continued for ten years, what would it do to us?”' ] },
-  { key: 'future', name: 'The future fork', initiator: 'B',
+  { key: 'future', name: 'The future fork',
     prompt: 'One of you wants children within the next two years. The other is not sure. Not a hard no, but not ready, and not sure when they will be. A close friend just announced a pregnancy and it has raised the question again. Tonight over dinner, your partner brings it up. What do you say?',
     talk: [ '“What does having (or not having) children mean for the life you imagine?”',
       '“If you could guarantee your partner would be genuinely happy either way, which would you choose?”',
       '“What is the difference between not yet and not sure? Where are you, honestly?”',
       '“If this stays unresolved for two years, what happens?”' ] },
-  { key: 'career', name: 'The career vs. us', initiator: 'A',
+  { key: 'career', name: 'The career vs. us',
     prompt: 'Your partner gets a transformative career opportunity: a dream role, much better pay, real fulfillment. But it requires relocating to a city where you have no network, no job lined up, and a higher cost of living. They are clearly excited. They ask: “What do you think?” What do you say?',
     talk: [ '“If the roles were reversed, would you give the same answer you just wrote?”',
       '“What would you need in order to feel genuinely okay about this, not just resigned?”',
       '“Is there a version of no that does not feel like betrayal to the person asking?”',
       '“Whose career has been prioritized so far? Is that pattern intentional?”' ] },
-  { key: 'digital', name: 'The digital rift', initiator: 'B',
+  { key: 'digital', name: 'The digital rift',
     prompt: 'You are telling your partner about something that genuinely matters to you, not small talk. Mid-sentence, they pick up their phone and start scrolling. You stop talking. After a few seconds they look up and say, “Sorry, go on. I’m listening.” This is not the first time. What do you do?',
     talk: [ 'Phone-checker: “What were you actually doing? Work, habit, or avoidance?”',
       'Speaker: “What did that moment feel like: annoying, or something deeper?”',
@@ -177,14 +201,14 @@ const SCENARIOS = [
 ];
 
 const MARKERS = [
-  { key: 'soft',      t: 'I raised (or received) the issue gently, without blame.', good: true },
-  { key: 'criticism', t: 'I criticized my partner’s character, not just the issue (“you always…”, “you’re the kind of person who…”).', good: false },
-  { key: 'contempt',  t: 'I used sarcasm, mockery, or eye-rolling, or felt superior to my partner.', good: false },
-  { key: 'defensive', t: 'I defended myself or counter-attacked instead of hearing them out.', good: false },
-  { key: 'stonewall', t: 'I went quiet, shut down, or wanted to leave the conversation.', good: false },
-  { key: 'repair',    t: 'I tried to de-escalate (humor, touch, acknowledgment, “let’s slow down”).', good: true },
-  { key: 'accepted',  t: 'When my partner tried to make peace, I accepted it.', good: true },
-  { key: 'resolved',  t: 'We ended with a concrete next step, not just a change of subject.', good: true },
+  { key: 'soft',      t: 'I raised (or received) the issue gently, without blame.' },
+  { key: 'criticism', t: 'I criticized my partner’s character, not just the issue (“you always…”, “you’re the kind of person who…”).' },
+  { key: 'contempt',  t: 'I used sarcasm, mockery, or eye-rolling, or felt superior to my partner.' },
+  { key: 'defensive', t: 'I defended myself or counter-attacked instead of hearing them out.' },
+  { key: 'stonewall', t: 'I went quiet, shut down, or wanted to leave the conversation.' },
+  { key: 'repair',    t: 'I tried to de-escalate (humor, touch, acknowledgment, “let’s slow down”).' },
+  { key: 'accepted',  t: 'When my partner tried to make peace, I accepted it.' },
+  { key: 'resolved',  t: 'We ended with a concrete next step, not just a change of subject.' },
 ];
 
 const TYPES = {
@@ -204,6 +228,7 @@ const TYPES = {
     blurb: 'Low engagement across most dimensions, often couples who are together by momentum rather than by ongoing choice. Getting this result before an engagement is precisely the point of taking this assessment now. It does not mean end it. It means: decide on purpose, with open eyes, after real conversations.' },
 };
 
+// ---------- State ----------
 const state = {
   screen: 'intro',
   context: { nameA: '', nameB: '', duration: '', cohab: '', ses: '', kidsIntent: '' },
@@ -213,11 +238,27 @@ const state = {
   quizPartner: 'A', quizPage: 0,
 };
 
+// Networking state for the two-phone mode.
+const net = {
+  mode: 'solo',            // 'solo' | 'host' | 'guest'
+  peer: null, conn: null,
+  code: '', myName: '', otherName: '',
+  myP: 'A',                // host is A, guest is B
+  connected: false, dropped: false,
+  myQuizDone: false, partnerQuizDone: false, partnerProgress: 0, myProgress: 0,
+  myReady: false, partnerReady: false,
+  myRefl: false, partnerRefl: false,
+  totalItems: DIMENSIONS.reduce((s, d) => s + d.items.length, 0),
+};
+
 const LAYERS = ['Enduring vulnerabilities', 'Stress landscape', 'Adaptive capacity'];
+const QUIZ_PAGES = LAYERS.map(l => DIMENSIONS.filter(d => d.layer === l));
 const app = document.getElementById('app');
 const esc = s => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 function pname(p) { return esc(state.context['name' + p]) || ('Partner ' + p); }
+function otherP() { return net.myP === 'A' ? 'B' : 'A'; }
 
+// ---------- Scoring (unchanged from v0.1) ----------
 function dimScore(partner, dim) {
   const vals = state.answers[partner][dim.key] || [];
   if (!vals.length) return null;
@@ -233,7 +274,7 @@ function computeResults() {
     let flag = 'aligned';
     if (gap > 30 && d.weight >= 2) flag = 'alert';
     else if (gap > 15) flag = 'gap';
-    return { ...d, a, b, couple, gap, flag };
+    return { key: d.key, name: d.name, layer: d.layer, weight: d.weight, basis: d.basis, a, b, couple, gap, flag };
   });
   const D = k => dims.find(d => d.key === k);
 
@@ -247,6 +288,7 @@ function computeResults() {
   });
   const horsemen = tally.criticism + tally.defensive + tally.stonewall + 3 * tally.contempt;
   const repairAcceptRate = repairOffered ? repairAcceptedWhenOffered / repairOffered : null;
+  const repairMadeCount = state.scenarios.filter(s => s.reflA.repair || s.reflB.repair).length;
   const resolutionRate = resolvedCount / SCENARIOS.length;
 
   const emotional = Math.round((D('ATT').couple + D('REP').couple + D('HIS').couple + D('DIG').couple) / 4);
@@ -276,7 +318,7 @@ function computeResults() {
   let risk = 0;
   if (tally.contempt >= 1) risk += 2;
   if (horsemen >= 10) risk += 2; else if (horsemen >= 6) risk += 1;
-  risk += dims.filter(d => d.flag === 'alert').length;
+  risk += alertCount;
   if (D('COM').couple < 50) risk += 2;
   if (D('PER').couple < 45) risk += 1;
   if (repairAcceptRate !== null && repairAcceptRate < 0.5) risk += 1;
@@ -332,87 +374,307 @@ function computeResults() {
                               (x.weight * (x.flag === 'alert' ? 40 : x.flag === 'gap' ? 20 : 0) + x.weight * (100 - x.couple)))
     .forEach(d => { if (planKeys.length < 4 && d.couple < 70 || d.flag !== 'aligned') { if (!planKeys.includes(d.key) && planKeys.length < 4) planKeys.push(d.key); } });
   if (resolutionRate < 0.5 && !planKeys.includes('AVOID')) planKeys.splice(Math.min(1, planKeys.length), 0, 'AVOID');
+  if (planKeys.length < 3) dims.slice().sort((x, y) => x.couple - y.couple).forEach(d => { if (planKeys.length < 3 && !planKeys.includes(d.key)) planKeys.push(d.key); });
   const plan = planKeys.slice(0, 3).map(k => PLAYBOOK[k]);
 
-  return { dims, tally, horsemen, repairAcceptRate, resolutionRate, emotional, practical, conflictSkill, overall, type, trajectory, forecast, risks, protectives, plan };
+  return { dims, tally, horsemen, repairAcceptRate, repairMadeCount, resolutionRate, emotional, practical, conflictSkill, overall, type, trajectory, forecast, risks, protectives, plan };
 }
 
+// ---------- Networking (PeerJS, peer-to-peer) ----------
+const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+function makeCode() { let c = ''; for (let i = 0; i < 6; i++) c += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]; return c; }
+function peerId(code) { return 'mblueprint-' + code.toUpperCase(); }
+
+function send(msg) { if (net.conn && net.conn.open) net.conn.send(msg); }
+
+function wireConn(conn) {
+  net.conn = conn;
+  conn.on('data', onMsg);
+  conn.on('close', () => { net.dropped = true; net.connected = false; render(); });
+  conn.on('error', () => { net.dropped = true; net.connected = false; render(); });
+}
+
+function startHost() {
+  net.mode = 'host'; net.myP = 'A'; net.code = makeCode();
+  net.peer = new Peer(peerId(net.code));
+  net.peer.on('open', () => { state.screen = 'pair-host'; render(); });
+  net.peer.on('error', (e) => {
+    if (e.type === 'unavailable-id') { net.code = makeCode(); net.peer.destroy(); startHost(); return; }
+    net.dropped = true; render();
+  });
+  net.peer.on('connection', (conn) => {
+    wireConn(conn);
+    conn.on('open', () => {
+      net.connected = true;
+      send({ t: 'hi', name: net.myName });
+      render();
+    });
+  });
+  state.screen = 'pair-host'; render();
+}
+
+function startGuest(code) {
+  net.mode = 'guest'; net.myP = 'B'; net.code = code.toUpperCase();
+  net.peer = new Peer();
+  net.peer.on('error', () => { net.dropped = true; render(); });
+  net.peer.on('open', () => {
+    const conn = net.peer.connect(peerId(net.code), { reliable: true });
+    wireConn(conn);
+    conn.on('open', () => {
+      net.connected = true;
+      send({ t: 'hi', name: net.myName });
+      state.screen = 'wait-context'; render();
+    });
+  });
+  state.screen = 'pair-guest-connecting'; render();
+}
+
+function onMsg(msg) {
+  if (msg.t === 'hi') {
+    net.otherName = msg.name || '';
+    state.context.nameA = net.mode === 'host' ? net.myName : net.otherName;
+    state.context.nameB = net.mode === 'host' ? net.otherName : net.myName;
+    if (net.mode === 'host') { state.screen = 'context'; render(); }
+  }
+  if (msg.t === 'context') { state.context = msg.context; state.screen = 'quiz'; state.quizPage = 0; state.quizPartner = net.myP; render(); }
+  if (msg.t === 'progress') { net.partnerProgress = msg.n; const el = document.getElementById('pbar'); if (el) { el.style.width = Math.round(msg.n / net.totalItems * 100) + '%'; const lbl = document.getElementById('plbl'); if (lbl) lbl.textContent = esc(net.otherName || 'Your partner') + ': ' + msg.n + '/' + net.totalItems; } }
+  if (msg.t === 'quiz-done') { state.answers[otherP()] = msg.answers; net.partnerQuizDone = true; hostMaybeTogether(); if (state.screen === 'quiz-wait') render(); }
+  if (msg.t === 'together') { state.screen = 'together'; render(); }
+  if (msg.t === 'scenario') { state.scenIdx = msg.idx; resetScFlags(); state.screen = 'sc-write'; render(); }
+  if (msg.t === 'resp') { state.scenarios[msg.idx]['resp' + otherP()] = msg.text; hostMaybeReveal(msg.idx); if (state.screen === 'sc-wait') render(); }
+  if (msg.t === 'reveal') { state.scenarios[msg.idx].respA = msg.respA; state.scenarios[msg.idx].respB = msg.respB; state.screen = 'sc-reveal'; render(); }
+  if (msg.t === 'ready') { net.partnerReady = true; hostMaybeReflect(); if (state.screen === 'sc-reveal') render(); }
+  if (msg.t === 'reflect') { state.screen = 'sc-reflect'; render(); }
+  if (msg.t === 'refl') { state.scenarios[msg.idx]['refl' + otherP()] = msg.flags; net.partnerRefl = true; hostMaybeNext(); if (state.screen === 'sc-wait') render(); }
+  if (msg.t === 'report') { state.context = msg.context; state.scenarios = msg.scenarios; state.screen = 'report'; renderReport(msg.results); }
+}
+
+function resetScFlags() { net.myReady = false; net.partnerReady = false; net.myRefl = false; net.partnerRefl = false; }
+
+// Host-side advancement (host is the authority in a paired session).
+function hostMaybeTogether() {
+  if (net.mode !== 'host') return;
+  if (net.myQuizDone && net.partnerQuizDone) { send({ t: 'together' }); state.screen = 'together'; render(); }
+}
+function hostMaybeReveal(idx) {
+  if (net.mode !== 'host') return;
+  const s = state.scenarios[idx];
+  if (s.respA !== '' && s.respB !== '' && s._sentReveal !== true) {
+    s._sentReveal = true;
+    send({ t: 'reveal', idx, respA: s.respA, respB: s.respB });
+    state.screen = 'sc-reveal'; render();
+  }
+}
+function hostMaybeReflect() {
+  if (net.mode !== 'host') return;
+  if (net.myReady && net.partnerReady) { send({ t: 'reflect', idx: state.scenIdx }); state.screen = 'sc-reflect'; render(); }
+}
+function hostMaybeNext() {
+  if (net.mode !== 'host') return;
+  if (!(net.myRefl && net.partnerRefl)) return;
+  if (state.scenIdx < SCENARIOS.length - 1) {
+    const next = state.scenIdx + 1;
+    send({ t: 'scenario', idx: next });
+    state.scenIdx = next; resetScFlags(); state.screen = 'sc-write'; render();
+  } else {
+    const results = computeResults();
+    send({ t: 'report', results, scenarios: state.scenarios, context: state.context });
+    state.screen = 'report'; renderReport(results);
+  }
+}
+
+// ---------- Rendering ----------
 function render() {
   window.scrollTo(0, 0);
   const s = state.screen;
   if (s === 'intro') return renderIntro();
+  if (s === 'mode') return renderMode();
+  if (s === 'pair-name') return renderPairName();
+  if (s === 'pair-host') return renderPairHost();
+  if (s === 'pair-guest') return renderPairGuest();
+  if (s === 'pair-guest-connecting') return renderConnecting();
+  if (s === 'wait-context') return renderWaitContext();
   if (s === 'context') return renderContext();
   if (s === 'quiz') return renderQuiz();
+  if (s === 'quiz-wait') return renderQuizWait();
+  if (s === 'together') return renderTogether();
+  if (s === 'sc-write') return renderScWrite();
+  if (s === 'sc-wait') return renderScWait();
+  if (s === 'sc-reveal') return renderScReveal();
+  if (s === 'sc-reflect') return renderScReflect();
   if (s === 'handoff') return renderHandoff();
   if (s === 'modeb-intro') return renderModeBIntro();
-  if (s === 'scenario') return renderScenario();
+  if (s === 'scenario') return renderScenarioSolo();
   if (s === 'report') return renderReport();
+}
+
+function dropBanner() {
+  return net.dropped ? '<div class="banner">Connection to your partner’s device was lost. Move closer together and both refresh this page to start a new paired session, or use one-device mode.</div>' : '';
 }
 
 function renderIntro() {
   app.innerHTML = `
     <h1>Take the test</h1>
-    <p class="muted">A pre-engagement compatibility and readiness assessment. Version 0.1, research prototype.</p>
+    <p class="muted">A pre-engagement compatibility and readiness assessment. Version 0.2, research prototype.</p>
     <div class="card">
       <h2 style="margin-top:0">Before you begin</h2>
       <p>This is a mirror, not a judge. It will never tell you whether to marry. It will show you the patterns research says matter most, so you can decide with open eyes.</p>
-      <p>It has two parts. <strong>Part one</strong> (about 15 minutes each, taken separately): individual questionnaires across ten research-backed dimensions. <strong>Part two</strong> (45-55 minutes, taken together): six scenario conversations that reveal how you actually navigate disagreement, not how you think you do.</p>
+      <p>It has two parts. <strong>Part one</strong> (about 15 minutes): you each answer your own questionnaire, at the same time, on your own phones. <strong>Part two</strong> (45-55 minutes): six scenario conversations. You each write your honest response privately, then your screens reveal both answers at the same moment, and you talk it through face to face.</p>
       <p>Best taken while you are seriously dating, <em>before</em> an engagement. Research on 13-year couple trajectories shows the patterns visible now predict what comes later, and it is easier to act on what you learn before the ring changes the stakes.</p>
-      <p class="small">This prototype stores nothing on any server. Everything stays in this browser tab, and refreshing the page erases your progress. It is an unvalidated research prototype, not a clinical instrument, and is not a substitute for professional counseling. Read the <a href="limitations.html">limitations</a> before you start.</p>
+      <p class="small">Nothing is stored on any server. In a paired session your answers travel directly between your two devices and live only in your browsers. Refreshing the page erases your progress. This is an unvalidated research prototype, not a clinical instrument, and not a substitute for professional counseling. Read the <a href="limitations.html">limitations</a> before you start.</p>
     </div>
-    <button class="primary" onclick="go('context')">Start</button>`;
+    <button class="primary" onclick="go('mode')">Start</button>`;
+}
+
+function renderMode() {
+  app.innerHTML = `
+    <h2 style="margin-top:0">How are you taking it?</h2>
+    <p class="muted">You will need to be in the same room either way. Part two happens out loud.</p>
+    <div class="card modecard" onclick="net.pendingRole='host';go('pair-name')">
+      <h3 style="margin-top:0">Two phones, together <span class="pill" style="background:var(--green-bg);color:var(--green)">Recommended</span></h3>
+      <p class="muted" style="margin:0">One of you starts a session and the other joins by scanning a QR code or typing a short code. You both answer at the same time on your own phones. No waiting, no passing, and your private answers stay private.</p>
+    </div>
+    <div class="card modecard" onclick="net.pendingRole='join';go('pair-name')">
+      <h3 style="margin-top:0">Join your partner’s session</h3>
+      <p class="muted" style="margin:0">Your partner already has a code on their screen. Scan it or type it here.</p>
+    </div>
+    <div class="card modecard" onclick="net.mode='solo';go('context')">
+      <h3 style="margin-top:0">One device, passed between you</h3>
+      <p class="muted" style="margin:0">The classic mode. You hand the device back and forth and look away during each other’s turns.</p>
+    </div>`;
+}
+
+function renderPairName() {
+  const joining = net.pendingRole === 'join';
+  app.innerHTML = `
+    <h2 style="margin-top:0">${joining ? 'Join a session' : 'Start a session'}</h2>
+    <div class="card">
+      <h3 style="margin-top:0">Your first name</h3>
+      <input type="text" id="myname" value="${esc(net.myName)}" placeholder="e.g. Selin" autocomplete="given-name">
+      ${joining ? `<h3>Session code</h3>
+      <input type="text" id="joincode" value="${esc(net.prefillCode || '')}" placeholder="6-letter code from your partner’s screen" style="text-transform:uppercase" maxlength="6">` : ''}
+    </div>
+    <div class="nav"><button onclick="go('mode')">Back</button>
+    <button class="primary" onclick="pairGo(${joining})">${joining ? 'Connect' : 'Create session'}</button></div>
+    <p class="small center" id="warn" style="display:none;color:var(--red)">Please enter ${joining ? 'your name and the 6-letter code' : 'your name'}.</p>`;
+}
+
+function pairGo(joining) {
+  net.myName = document.getElementById('myname').value.trim();
+  if (!net.myName) { document.getElementById('warn').style.display = 'block'; return; }
+  if (joining) {
+    const code = (document.getElementById('joincode').value || '').trim().toUpperCase();
+    if (code.length !== 6) { document.getElementById('warn').style.display = 'block'; return; }
+    startGuest(code);
+  } else {
+    startHost();
+  }
+}
+
+function renderPairHost() {
+  const joinUrl = location.origin + location.pathname + '#join=' + net.code;
+  app.innerHTML = dropBanner() + `
+    <h2 style="margin-top:0">Your session is ready</h2>
+    <p class="muted">Have ${net.otherName ? esc(net.otherName) : 'your partner'} scan this with their phone camera, or go to this page, choose “Join your partner’s session”, and type the code.</p>
+    <div class="card center">
+      <div id="qr"></div>
+      <p class="small" style="margin:0 0 4px">or enter the code</p>
+      <div class="codebox">${net.code}</div>
+      <p class="small" style="margin:8px 0 0">${net.connected ? '<span class="pulse"></span>' + esc(net.otherName || 'Partner') + ' is connected.' : '<span class="pulse"></span>Waiting for your partner to join…'}</p>
+    </div>
+    <div class="nav"><button onclick="location.reload()">Cancel</button><span></span></div>`;
+  if (typeof QRCode !== 'undefined') new QRCode(document.getElementById('qr'), { text: joinUrl, width: 190, height: 190, correctLevel: QRCode.CorrectLevel.M });
+}
+
+function renderConnecting() {
+  app.innerHTML = dropBanner() + `
+    <div class="card center" style="padding:48px 24px">
+      <h2 style="margin-top:0"><span class="pulse"></span>Connecting to ${esc(net.code)}…</h2>
+      <p class="muted">Make sure your partner’s session screen is open.</p>
+      <button onclick="location.reload()">Cancel</button>
+    </div>`;
+}
+
+function renderWaitContext() {
+  app.innerHTML = dropBanner() + `
+    <div class="card center" style="padding:40px 24px">
+      <h2 style="margin-top:0">Connected to ${esc(net.otherName || 'your partner')}</h2>
+      <p class="muted"><span class="pulse"></span>They are filling in a few quick questions about you two. Your questionnaire starts in a moment.</p>
+      <p class="small">While you wait: answer as things are, not as you wish they were. Your individual answers stay on your phone; your partner only ever sees the combined results.</p>
+    </div>`;
 }
 
 function renderContext() {
   const c = state.context;
-  app.innerHTML = `
+  const paired = net.mode !== 'solo';
+  app.innerHTML = dropBanner() + `
     <h2 style="margin-top:0">About you two</h2>
     <p class="muted">Context matters: research shows the same behavior can be adaptive in one situation and harmful in another. These answers calibrate your results.</p>
     <div class="card">
+      ${paired ? '' : `<div class="row" style="margin-bottom:12px">
+        <div><h3 style="margin-top:0">Partner A, first name</h3><input type="text" id="nameA" value="${esc(c.nameA)}" placeholder="e.g. Selin"></div>
+        <div><h3 style="margin-top:0">Partner B, first name</h3><input type="text" id="nameB" value="${esc(c.nameB)}" placeholder="e.g. Alex"></div>
+      </div>`}
       <div class="row" style="margin-bottom:12px">
-        <div><h3>Partner A, first name</h3><input type="text" id="nameA" value="${esc(c.nameA)}" placeholder="e.g. Selin"></div>
-        <div><h3>Partner B, first name</h3><input type="text" id="nameB" value="${esc(c.nameB)}" placeholder="e.g. Alex"></div>
-      </div>
-      <div class="row" style="margin-bottom:12px">
-        <div><h3>Time together</h3><select id="duration">
+        <div><h3 style="margin-top:0">Time together</h3><select id="duration">
           <option value="">Select…</option><option ${c.duration==='<1'?'selected':''} value="<1">Under 1 year</option>
           <option ${c.duration==='1-3'?'selected':''} value="1-3">1-3 years</option>
           <option ${c.duration==='3+'?'selected':''} value="3+">3+ years</option></select></div>
-        <div><h3>Living together?</h3><select id="cohab">
+        <div><h3 style="margin-top:0">Living together?</h3><select id="cohab">
           <option value="">Select…</option><option ${c.cohab==='no'?'selected':''} value="no">No</option>
           <option ${c.cohab==='yes'?'selected':''} value="yes">Yes</option></select></div>
       </div>
       <div class="row">
-        <div><h3>Financial situation feels…</h3><select id="ses">
+        <div><h3 style="margin-top:0">Financial situation feels…</h3><select id="ses">
           <option value="">Select…</option><option ${c.ses==='tight'?'selected':''} value="tight">Tight / stretched</option>
           <option ${c.ses==='ok'?'selected':''} value="ok">Comfortable</option>
           <option ${c.ses==='secure'?'selected':''} value="secure">Very secure</option></select></div>
-        <div><h3>Children someday?</h3><select id="kidsIntent">
+        <div><h3 style="margin-top:0">Children someday?</h3><select id="kidsIntent">
           <option value="">Select…</option><option ${c.kidsIntent==='both-yes'?'selected':''} value="both-yes">We both want them</option>
           <option ${c.kidsIntent==='both-no'?'selected':''} value="both-no">We both do not</option>
           <option ${c.kidsIntent==='differ'?'selected':''} value="differ">We differ / unsure</option></select></div>
       </div>
     </div>
-    <div class="nav"><button onclick="go('intro')">Back</button>
-    <button class="primary" onclick="saveContext()">Continue to Partner A’s questionnaire</button></div>`;
+    <div class="nav">${paired ? '<span></span>' : `<button onclick="go('mode')">Back</button>`}
+    <button class="primary" onclick="saveContext()">${paired ? 'Start both questionnaires' : 'Continue to Partner A’s questionnaire'}</button></div>`;
 }
 
 function saveContext() {
-  ['nameA','nameB','duration','cohab','ses','kidsIntent'].forEach(k => state.context[k] = document.getElementById(k).value.trim());
-  state.quizPartner = 'A'; state.quizPage = 0; go('quiz');
+  ['duration','cohab','ses','kidsIntent'].forEach(k => state.context[k] = document.getElementById(k).value.trim());
+  if (net.mode === 'solo') {
+    state.context.nameA = document.getElementById('nameA').value.trim();
+    state.context.nameB = document.getElementById('nameB').value.trim();
+    state.quizPartner = 'A'; state.quizPage = 0; go('quiz');
+  } else {
+    send({ t: 'context', context: state.context });
+    state.quizPartner = net.myP; state.quizPage = 0; go('quiz');
+  }
 }
 
-const QUIZ_PAGES = LAYERS.map(l => DIMENSIONS.filter(d => d.layer === l));
+function countAnswered(p) {
+  let n = 0;
+  DIMENSIONS.forEach(d => (state.answers[p][d.key] || []).forEach(v => { if (v) n++; }));
+  return n;
+}
 
 function renderQuiz() {
   const p = state.quizPartner, page = QUIZ_PAGES[state.quizPage];
+  const paired = net.mode !== 'solo';
   const totalPages = QUIZ_PAGES.length;
-  const pct = ((state.quizPartner === 'B' ? totalPages : 0) + state.quizPage) / (totalPages * 2) * 100;
-  let html = `
-    <div class="progress"><div style="width:${pct}%"></div></div>
+  const pct = paired
+    ? (state.quizPage / totalPages) * 100
+    : ((state.quizPartner === 'B' ? totalPages : 0) + state.quizPage) / (totalPages * 2) * 100;
+  let html = dropBanner() + `
+    <div class="progress"><div style="width:${pct}%"></div></div>`;
+  if (paired) {
+    const pn = Math.round(net.partnerProgress / net.totalItems * 100);
+    html += `<div class="partnerbar"><span id="plbl">${esc(net.otherName || 'Your partner')}: ${net.partnerProgress}/${net.totalItems}</span><div class="progress partner"><div id="pbar" style="width:${pn}%"></div></div></div>`;
+  }
+  html += `
     <span class="pill ${p === 'A' ? 'badge-a' : 'badge-b'}">${pname(p)}</span>
     <h2 style="margin-top:8px">${page[0].layer}</h2>
-    <p class="muted">Answer honestly, as things are, not as you wish they were. Your partner will not see your individual answers, only the combined results.</p>`;
+    <p class="muted">Answer honestly, as things are, not as you wish they were. Your partner will not see your individual answers, only the combined results.</p>
+    <p class="small">1 = strongly disagree · 5 = strongly agree</p>`;
   page.forEach(dim => {
     html += `<div class="card"><h3 style="margin-top:0">${dim.name}</h3>`;
     dim.items.forEach((it, i) => {
@@ -420,7 +682,7 @@ function renderQuiz() {
       html += `<div class="item"><p>${it.t}</p><div class="likert">`;
       ['Strongly disagree','Disagree','Neutral','Agree','Strongly agree'].forEach((lab, vi) => {
         const v = vi + 1;
-        html += `<label><input type="radio" name="${dim.key}_${i}" value="${v}" ${cur === v ? 'checked' : ''} onchange="setAnswer('${dim.key}',${i},${v})"><span>${lab}</span></label>`;
+        html += `<label><input type="radio" name="${dim.key}_${i}" value="${v}" ${cur === v ? 'checked' : ''} onchange="setAnswer('${dim.key}',${i},${v})"><span class="lk-word">${lab}</span><span class="lk-num">${v}</span></label>`;
       });
       html += `</div></div>`;
     });
@@ -437,6 +699,7 @@ function setAnswer(dimKey, i, v) {
   const p = state.quizPartner;
   if (!state.answers[p][dimKey]) state.answers[p][dimKey] = [];
   state.answers[p][dimKey][i] = v;
+  if (net.mode !== 'solo') { net.myProgress = countAnswered(p); send({ t: 'progress', n: net.myProgress }); }
 }
 
 function pageComplete() {
@@ -447,16 +710,132 @@ function pageComplete() {
 
 function quizNext() {
   if (!pageComplete()) { document.getElementById('quizWarn').style.display = 'block'; return; }
-  if (state.quizPage < QUIZ_PAGES.length - 1) { state.quizPage++; render(); }
-  else if (state.quizPartner === 'A') { go('handoff'); }
-  else { go('modeb-intro'); }
+  if (state.quizPage < QUIZ_PAGES.length - 1) { state.quizPage++; render(); return; }
+  if (net.mode === 'solo') {
+    if (state.quizPartner === 'A') go('handoff'); else go('modeb-intro');
+  } else {
+    net.myQuizDone = true;
+    if (net.mode === 'guest') send({ t: 'quiz-done', answers: state.answers[net.myP] });
+    if (net.mode === 'host') hostMaybeTogether();
+    if (state.screen !== 'together') go('quiz-wait');
+  }
 }
 
 function quizBack() {
-  if (state.quizPage > 0) { state.quizPage--; render(); }
-  else go(state.quizPartner === 'A' ? 'context' : 'handoff');
+  if (state.quizPage > 0) { state.quizPage--; render(); return; }
+  if (net.mode === 'solo') go(state.quizPartner === 'A' ? 'context' : 'handoff');
 }
 
+function renderQuizWait() {
+  app.innerHTML = dropBanner() + `
+    <div class="card center" style="padding:44px 24px">
+      <h2 style="margin-top:0">Done. Nicely done.</h2>
+      <p class="muted"><span class="pulse"></span>${esc(net.otherName || 'Your partner')} is still answering (${net.partnerProgress}/${net.totalItems}). The moment they finish, part two begins on both phones.</p>
+      <p class="small">No peeking over shoulders. The reveal works because it is honest.</p>
+    </div>`;
+}
+
+function renderTogether() {
+  const isHost = net.mode === 'host';
+  app.innerHTML = dropBanner() + `
+    <div class="card center" style="padding:48px 24px;border-top:4px solid var(--green)">
+      <h2 style="margin-top:0">Come back together</h2>
+      <p>Part one is done. Part two happens out loud: put yourselves side by side, somewhere quiet, with no time pressure.</p>
+      <p class="muted">Six scenarios. For each one you will write your honest response privately on your own phone, then both screens reveal the two answers at the same moment, and you talk it through. After the talk, each of you privately checks off what actually happened.</p>
+      ${isHost
+        ? `<button class="primary" onclick="hostBeginScenarios()">We’re side by side. Begin scenario 1</button>`
+        : `<p class="small"><span class="pulse"></span>${esc(net.otherName || 'Your partner')} starts it when you are both ready.</p>`}
+    </div>`;
+}
+
+function hostBeginScenarios() {
+  send({ t: 'scenario', idx: 0 });
+  state.scenIdx = 0; resetScFlags(); state.screen = 'sc-write'; render();
+}
+
+function scHeader(sub) {
+  const idx = state.scenIdx, sc = SCENARIOS[idx];
+  const pct = (idx * 3 + sub) / (SCENARIOS.length * 3) * 100;
+  return `<div class="progress"><div style="width:${pct}%"></div></div>
+    <p class="small">Scenario ${idx + 1} of 6</p><h2 style="margin-top:0">${sc.name}</h2>`;
+}
+
+function renderScWrite() {
+  const idx = state.scenIdx, sc = SCENARIOS[idx];
+  app.innerHTML = dropBanner() + scHeader(0) + `
+    <span class="pill ${net.myP === 'A' ? 'badge-a' : 'badge-b'}">${esc(net.myName)}, write privately</span>
+    <div class="card" style="margin-top:12px"><p>${sc.prompt}</p></div>
+    <div class="card"><h3 style="margin-top:0">What would you actually say or do?</h3>
+    <textarea id="resp" placeholder="Be honest, not ideal. Your partner sees this only at the reveal.">${esc(state.scenarios[idx]['resp' + net.myP])}</textarea></div>
+    <div class="nav"><span></span><button class="primary" onclick="submitResp()">Lock in my response</button></div>
+    <p class="small center" id="warn" style="display:none;color:var(--red)">Write your honest response first.</p>`;
+}
+
+function submitResp() {
+  const text = document.getElementById('resp').value.trim();
+  if (!text) { document.getElementById('warn').style.display = 'block'; return; }
+  const idx = state.scenIdx;
+  state.scenarios[idx]['resp' + net.myP] = text;
+  if (net.mode === 'guest') { send({ t: 'resp', idx, text }); }
+  if (net.mode === 'host') { hostMaybeReveal(idx); }
+  if (state.screen === 'sc-write') { state.screen = 'sc-wait'; net.waitWhat = 'their response'; render(); }
+}
+
+function renderScWait() {
+  app.innerHTML = dropBanner() + scHeader(1) + `
+    <div class="card center" style="padding:40px 24px">
+      <p class="muted" style="margin:0"><span class="pulse"></span>Locked in. Waiting for ${esc(net.otherName || 'your partner')} to finish ${net.waitWhat || 'up'}…</p>
+    </div>`;
+}
+
+function renderScReveal() {
+  const idx = state.scenIdx, sc = SCENARIOS[idx], data = state.scenarios[idx];
+  app.innerHTML = dropBanner() + scHeader(1) + `
+    <span class="pill" style="background:var(--blue-bg);color:var(--blue)">The reveal: read, then talk</span>
+    <div class="row" style="margin-top:12px">
+      <div class="card"><h3 style="margin-top:0"><span class="pill badge-a">${pname('A')}</span></h3><p style="white-space:pre-wrap">${esc(data.respA)}</p></div>
+      <div class="card"><h3 style="margin-top:0"><span class="pill badge-b">${pname('B')}</span></h3><p style="white-space:pre-wrap">${esc(data.respB)}</p></div>
+    </div>
+    <div class="card"><h3 style="margin-top:0">Now talk it through, out loud (about 8 minutes)</h3>
+    <ol style="padding-left:20px;margin:0">${sc.talk.map(t => `<li style="margin-bottom:8px;font-size:14px">${t}</li>`).join('')}</ol></div>
+    <div class="nav"><span></span>${net.myReady
+      ? `<p class="small" style="margin:0"><span class="pulse"></span>Waiting for ${esc(net.otherName || 'your partner')} to tap ready…</p>`
+      : `<button class="primary" onclick="tapReady()">We’ve talked. I’m ready</button>`}</div>`;
+}
+
+function tapReady() {
+  net.myReady = true;
+  if (net.mode === 'guest') send({ t: 'ready', idx: state.scenIdx });
+  if (net.mode === 'host') hostMaybeReflect();
+  if (state.screen === 'sc-reveal') render();
+}
+
+function renderScReflect() {
+  const idx = state.scenIdx;
+  const key = 'refl' + net.myP;
+  const data = state.scenarios[idx];
+  let html = dropBanner() + scHeader(2) + `
+    <span class="pill ${net.myP === 'A' ? 'badge-a' : 'badge-b'}">${esc(net.myName)}, private reflection</span>
+    <div class="card" style="margin-top:12px"><h3 style="margin-top:0">During that conversation, which of these actually happened for you?</h3>
+    <p class="small">Check all that apply. Your partner never sees these. Honesty here, especially about your own behavior, is what makes the results real.</p>
+    <div class="checkgrid">`;
+  MARKERS.forEach(m => {
+    html += `<label><input type="checkbox" ${data[key][m.key] ? 'checked' : ''} onchange="state.scenarios[${idx}].${key}.${m.key}=this.checked"><span>${m.t}</span></label>`;
+  });
+  html += `</div></div>
+    <div class="nav"><span></span><button class="primary" onclick="submitRefl()">${idx < SCENARIOS.length - 1 ? 'Done. Next scenario' : 'Done. See our results'}</button></div>`;
+  app.innerHTML = html;
+}
+
+function submitRefl() {
+  const idx = state.scenIdx;
+  net.myRefl = true;
+  if (net.mode === 'guest') send({ t: 'refl', idx, flags: state.scenarios[idx]['refl' + net.myP] });
+  if (net.mode === 'host') hostMaybeNext();
+  if (state.screen === 'sc-reflect') { net.waitWhat = 'their reflection'; state.screen = 'sc-wait'; render(); }
+}
+
+// ---------- Solo (one device) flow, unchanged from v0.1 ----------
 function renderHandoff() {
   app.innerHTML = `
     <div class="card center" style="padding:48px 24px">
@@ -481,7 +860,7 @@ function renderModeBIntro() {
     <button class="primary" onclick="state.scenIdx=0;state.scenPhase=0;go('scenario')">Begin scenario 1 of 6</button>`;
 }
 
-function renderScenario() {
+function renderScenarioSolo() {
   const idx = state.scenIdx, sc = SCENARIOS[idx], data = state.scenarios[idx], ph = state.scenPhase;
   const pct = (idx * 5 + ph) / (SCENARIOS.length * 5) * 100;
   let html = `<div class="progress"><div style="width:${pct}%"></div></div>
@@ -494,7 +873,7 @@ function renderScenario() {
       <div class="card" style="margin-top:12px"><p>${sc.prompt}</p></div>
       <div class="card"><h3 style="margin-top:0">What would you actually say or do?</h3>
       <textarea id="resp" placeholder="Be honest, not ideal…">${esc(data[key])}</textarea></div>
-      <div class="nav"><span></span><button class="primary" onclick="saveResp('${key}')">${ph === 0 ? 'Done. Pass to ' + pname('B') : 'Done. Reveal both responses'}</button></div>`;
+      <div class="nav"><span></span><button class="primary" onclick="saveRespSolo('${key}')">${ph === 0 ? 'Done. Pass to ' + pname('B') : 'Done. Reveal both responses'}</button></div>`;
   } else if (ph === 2) {
     html += `<span class="pill" style="background:var(--blue-bg);color:var(--blue)">Together: reveal &amp; talk</span>
       <div class="card" style="margin-top:12px"><p class="small">${sc.prompt}</p></div>
@@ -516,23 +895,24 @@ function renderScenario() {
       html += `<label><input type="checkbox" ${data[key][m.key] ? 'checked' : ''} onchange="state.scenarios[${idx}].${key}.${m.key}=this.checked"><span>${m.t}</span></label>`;
     });
     html += `</div></div>
-      <div class="nav"><span></span><button class="primary" onclick="reflectNext()">${ph === 3 ? 'Done. Pass to ' + pname('B') : (idx < SCENARIOS.length - 1 ? 'Next scenario' : 'Finish and see your results')}</button></div>`;
+      <div class="nav"><span></span><button class="primary" onclick="reflectNextSolo()">${ph === 3 ? 'Done. Pass to ' + pname('B') : (idx < SCENARIOS.length - 1 ? 'Next scenario' : 'Finish and see your results')}</button></div>`;
   }
   app.innerHTML = html;
 }
 
-function saveResp(key) {
+function saveRespSolo(key) {
   state.scenarios[state.scenIdx][key] = document.getElementById('resp').value;
   state.scenPhase++; render();
 }
-function reflectNext() {
+function reflectNextSolo() {
   if (state.scenPhase === 3) { state.scenPhase = 4; render(); return; }
   if (state.scenIdx < SCENARIOS.length - 1) { state.scenIdx++; state.scenPhase = 0; render(); }
   else go('report');
 }
 
-function renderReport() {
-  const R = computeResults();
+// ---------- Report (shared) ----------
+function renderReport(Rin) {
+  const R = Rin || computeResults();
   const T = TYPES[R.type];
   const tc = { teal: ['#E1F5EE','#0F6E56'], blue: ['#E6F1FB','#185FA5'], green: ['#EAF3DE','#3B6D11'],
     amber: ['#FAEEDA','#854F0B'], coral: ['#FAECE7','#993C1D'], red: ['#FCEBEB','#A32D2D'] }[T.color];
@@ -574,7 +954,7 @@ function renderReport() {
       return `<div style="flex:1;text-align:center;background:var(--bg);border-radius:10px;padding:12px 4px">
         <p class="small" style="margin:0">${n}</p><p style="font-size:22px;font-weight:600;margin:0;color:${col}">${c}</p>
         <p class="small" style="margin:0">of 12 reports</p></div>`; }).join('')}</div>
-    <p style="margin-top:14px;font-size:14px">Repair attempts were made in <strong>${state.scenarios.filter(s => s.reflA.repair || s.reflB.repair).length} of 6</strong> scenarios${R.repairAcceptRate !== null ? ` and accepted <strong>${Math.round(R.repairAcceptRate * 100)}%</strong> of the time` : ''}. You reached a concrete next step in <strong>${Math.round(R.resolutionRate * 6)} of 6</strong> conversations.</p>
+    <p style="margin-top:14px;font-size:14px">Repair attempts were made in <strong>${R.repairMadeCount} of 6</strong> scenarios${R.repairAcceptRate !== null ? ` and accepted <strong>${Math.round(R.repairAcceptRate * 100)}%</strong> of the time` : ''}. You reached a concrete next step in <strong>${Math.round(R.resolutionRate * 6)} of 6</strong> conversations.</p>
     <p class="small">Counts combine both partners’ self-reports across all six scenarios (12 reports total). Contempt is weighted heaviest in your forecast; it is the single strongest behavioral predictor of divorce in longitudinal research.</p></div>`;
 
   const trajLabel = { low: 'Low conflict', middle: 'Middle conflict', high: 'High conflict' }[R.trajectory];
@@ -619,6 +999,14 @@ function renderReport() {
 }
 
 function go(screen) { state.screen = screen; render(); }
+
+// Deep link: test.html#join=CODE (or ?join=CODE) goes straight to the join screen.
+const hashMatch = location.hash.match(/join=([A-Za-z0-9]{6})/);
+const joinParam = hashMatch ? hashMatch[1] : new URLSearchParams(location.search).get('join');
+if (joinParam && joinParam.length === 6) {
+  net.pendingRole = 'join'; net.prefillCode = joinParam.toUpperCase();
+  state.screen = 'pair-name';
+}
 render();
 </script>
 </body>

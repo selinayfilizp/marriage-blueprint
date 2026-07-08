@@ -70,7 +70,7 @@
   <h2>Known gaps in this version</h2>
   <div class="card">
     <ul style="margin-bottom:0">
-      <li><strong>Single-device flow.</strong> Both partners use one device with a handoff. Honesty depends on the protocol being respected. A production version would use separate private links.</li>
+      <li><strong>Pairing relies on a brief connection relay.</strong> In the two-phone mode your devices exchange answers directly with each other, and nothing is stored on any server. Establishing that connection uses a public signaling service (PeerJS) for a moment, the way two phones find each other before a call connects. Your answers do not pass through it, but if the relay is down, pairing fails and you must use one-device mode. In the one-device fallback, honesty depends on the pass-and-look-away protocol being respected.</li>
       <li><strong>Contextual calibration is minimal.</strong> The socioeconomic moderation of conflict patterns is documented in the research but only lightly implemented here.</li>
       <li><strong>Nothing is saved.</strong> This protects your privacy completely, but it also means you cannot pause, resume, or compare a retake against your first result. Print or save the report if you want to keep it.</li>
       <li><strong>No professional in the loop.</strong> Established tools like PREPARE/ENRICH are administered with a trained facilitator who helps couples process hard findings. Here you are on your own with the report. If something in it stings, that is a signal to bring in a couples therapist, not to conclude the relationship is doomed.</li>
