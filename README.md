@@ -8,7 +8,7 @@ Most compatibility quizzes measure opinions. This one is built to surface patter
 
 The site runs entirely in the browser. Nothing is stored or sent anywhere.
 
-- **Live site:** see the GitHub Pages link in the repository sidebar
+- **Live site:** https://marriage-blueprint.vercel.app
 - **Locally:** open `index.html`, or serve the folder with any static server
 
 ## What's here
