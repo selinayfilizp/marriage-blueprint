@@ -170,6 +170,15 @@ const DIMENSIONS = [
       { t: 'I sometimes keep my options open in the back of my mind.', r: true },
       { t: 'Marriage to my partner feels like something I am actively choosing, not something happening to me.', r: false },
     ]},
+  { key: 'MUT', name: 'Mutuality and appreciation', layer: 'Adaptive capacity', weight: 3,
+    basis: 'Perceived partner commitment and appreciation were the strongest predictors of relationship quality across 43 longitudinal studies (Joel et al., machine learning analysis).',
+    items: [
+      { t: 'I am confident my partner is fully committed to this relationship.', r: false },
+      { t: 'I believe my partner is genuinely happy in this relationship.', r: false },
+      { t: 'My partner regularly notices and appreciates the things I do.', r: false },
+      { t: 'I often wonder whether my partner would rather be somewhere else.', r: true },
+      { t: 'I regularly tell my partner, in words, what I appreciate about them.', r: false },
+    ]},
 ];
 
 const SCENARIOS = [
@@ -247,6 +256,7 @@ const state = {
   scenIdx: 0, scenPhase: 0,
   scenarios: SCENARIOS.map(() => ({ respA: '', respB: '', reflA: {}, reflB: {} })),
   quizPartner: 'A', quizPage: 0,
+  quizStartMs: { A: null, B: null }, quizMs: { A: null, B: null },
 };
 
 // Networking state for the two-phone mode.
@@ -259,6 +269,7 @@ const net = {
   myQuizDone: false, partnerQuizDone: false, partnerProgress: 0, myProgress: 0,
   myReady: false, partnerReady: false,
   myRefl: false, partnerRefl: false,
+  safety: { afraid: false, controlled: false },
   totalItems: DIMENSIONS.reduce((s, d) => s + d.items.length, 0),
 };
 
@@ -353,6 +364,9 @@ function computeResults() {
   if (D('LIF').couple < 50)
     risks.push({ level: 'amber', title: 'Unmapped future',
       body: 'Children, geography, career priority, aging parents: several of these are undiscussed. These are dealbreaker-class topics that deserve explicit conversation before an engagement, not after.' });
+  if (D('MUT').couple < 50)
+    risks.push({ level: 'amber', title: 'Perceived commitment or appreciation deficit',
+      body: 'One or both of you is not convinced the other is all-in, or feels unnoticed. Across 43 longitudinal studies, believing your partner is committed and feeling appreciated were the strongest predictors of relationship quality. The good news: both are highly fixable, because they respond to being said out loud.' });
 
   if (tally.contempt === 0)
     protectives.push({ title: 'Zero contempt reported', body: 'The strongest divorce predictor is absent across all six scenarios. This is your most important protective factor.' });
@@ -362,6 +376,8 @@ function computeResults() {
     protectives.push({ title: 'Dual secure attachment', body: 'Both of you score in the secure range. Couples with two securely-attached partners show markedly higher satisfaction across 132 studies.' });
   if (D('COM').couple >= 75)
     protectives.push({ title: 'Strong commitment architecture', body: 'You are both building plans around this relationship and choosing it actively. Commitment predicts stability better than satisfaction does.' });
+  if (D('MUT').couple >= 75)
+    protectives.push({ title: 'You believe in each other’s commitment', body: 'You each see the other as all-in, and appreciation flows in both directions. Perceived partner commitment was the single strongest predictor of relationship quality in the largest machine-learning study of couples ever run.' });
   if (!protectives.length)
     protectives.push({ title: 'You showed up', body: 'Doing this assessment before an engagement is itself a protective behavior. Couples who examine their relationship deliberately outperform couples who drift.' });
 
@@ -378,6 +394,7 @@ function computeResults() {
     HIS: { title: 'Re-author your story', body: 'Separately write the story of how you got together and what made it serious. Read them to each other. Couples who narrate their relationship as chosen and built, not drifted into, show stronger long-term commitment. If the story feels passive, ask: what would choosing this actively look like?' },
     AVOID: { title: 'Build a resolution practice: the 15-minute rule', body: 'When a disagreement surfaces, set a 15-minute timer. You do not have to solve it, but you cannot leave before the timer ends, and you must close with one concrete next step each. This converts “let’s not fight” exits into “let’s finish this” completions. Most perpetual problems need managing, not solving, but managing requires staying in the room.' },
     CONTEMPT: { title: 'Install the appreciation habit', body: 'Contempt grows in a culture of criticism and starves in a culture of appreciation. Daily, each of you names one specific thing the other did that you appreciated. It feels mechanical for two weeks, then it rewires what you scan for. If contempt keeps surfacing, bring in a couples therapist early; it is far easier to treat at this stage.' },
+    MUT: { title: 'Say the commitment and the appreciation out loud', body: 'Two practices, both verbal. First: tell your partner, plainly and unprompted, that you are in this. Perceived partner commitment is the strongest known predictor of relationship quality, and it is built from hearing it, not inferring it. Second: one specific appreciation a day each ("you handled that call with your mom so gently"), specific beats generic. Two weeks in, notice what changes.' },
   };
   const planKeys = [];
   if (tally.contempt >= 1) planKeys.push('CONTEMPT');
@@ -388,7 +405,8 @@ function computeResults() {
   if (planKeys.length < 3) dims.slice().sort((x, y) => x.couple - y.couple).forEach(d => { if (planKeys.length < 3 && !planKeys.includes(d.key)) planKeys.push(d.key); });
   const plan = planKeys.slice(0, 3).map(k => PLAYBOOK[k]);
 
-  return { dims, tally, horsemen, repairAcceptRate, repairMadeCount, resolutionRate, emotional, practical, conflictSkill, overall, type, trajectory, forecast, risks, protectives, plan };
+  const quick = ['A', 'B'].filter(p => state.quizMs[p] && state.quizMs[p] < 150000);
+  return { dims, tally, horsemen, repairAcceptRate, repairMadeCount, resolutionRate, emotional, practical, conflictSkill, overall, type, trajectory, forecast, risks, protectives, plan, quick };
 }
 
 // ---------- Networking (PeerJS, peer-to-peer) ----------
@@ -460,7 +478,7 @@ function onMsg(msg) {
   }
   if (msg.t === 'context') { state.context = msg.context; state.screen = 'quiz'; state.quizPage = 0; state.quizPartner = net.myP; render(); }
   if (msg.t === 'progress') { net.partnerProgress = msg.n; const el = document.getElementById('pbar'); if (el) { el.style.width = Math.round(msg.n / net.totalItems * 100) + '%'; const lbl = document.getElementById('plbl'); if (lbl) lbl.textContent = esc(net.otherName || 'Your partner') + ': ' + msg.n + '/' + net.totalItems; } }
-  if (msg.t === 'quiz-done') { state.answers[otherP()] = msg.answers; net.partnerQuizDone = true; hostMaybeTogether(); if (state.screen === 'quiz-wait') render(); }
+  if (msg.t === 'quiz-done') { state.answers[otherP()] = msg.answers; if (msg.ms) state.quizMs[otherP()] = msg.ms; net.partnerQuizDone = true; hostMaybeTogether(); if (state.screen === 'quiz-wait') render(); }
   if (msg.t === 'together') { state.screen = 'together'; render(); }
   if (msg.t === 'scenario') { state.scenIdx = msg.idx; resetScFlags(); state.screen = 'sc-write'; render(); }
   if (msg.t === 'resp') { state.scenarios[msg.idx]['resp' + otherP()] = msg.text; hostMaybeReveal(msg.idx); if (state.screen === 'sc-wait') render(); }
@@ -508,6 +526,7 @@ function hostMaybeNext() {
 // ---------- Rendering ----------
 function render() {
   window.scrollTo(0, 0);
+  persist();
   const s = state.screen;
   if (s === 'intro') return renderIntro();
   if (s === 'mode') return renderMode();
@@ -518,6 +537,7 @@ function render() {
   if (s === 'wait-context') return renderWaitContext();
   if (s === 'context') return renderContext();
   if (s === 'quiz') return renderQuiz();
+  if (s === 'safety') return renderSafety();
   if (s === 'quiz-wait') return renderQuizWait();
   if (s === 'together') return renderTogether();
   if (s === 'sc-write') return renderScWrite();
@@ -535,9 +555,18 @@ function dropBanner() {
 }
 
 function renderIntro() {
+  const saved = loadSaved();
+  const resumeCard = saved ? `
+    <div class="card" style="border-color:var(--green)">
+      <h3 style="margin-top:0">Pick up where you left off?</h3>
+      <p class="muted" style="margin-bottom:12px">You have a one-device session in progress on this browser${saved.context && saved.context.nameA ? ' (' + esc(saved.context.nameA) + (saved.context.nameB ? ' &amp; ' + esc(saved.context.nameB) : '') + ')' : ''}.</p>
+      <button class="primary" onclick="resumeSaved()">Resume</button>
+      <button onclick="if(confirm('Discard the saved session?')){discardSaved()}">Discard</button>
+    </div>` : '';
   app.innerHTML = `
     <h1>Take the test</h1>
-    <p class="muted">A pre-engagement compatibility and readiness assessment. Version 0.2, research prototype.</p>
+    <p class="muted">A pre-engagement compatibility and readiness assessment. Version 0.3, research prototype.</p>
+    ${resumeCard}
     <div class="card">
       <h2 style="margin-top:0">Before you begin</h2>
       <p>This is a mirror, not a judge. It will never tell you whether to marry. It will show you the patterns research says matter most, so you can decide with open eyes.</p>
@@ -681,6 +710,7 @@ function countAnswered(p) {
 
 function renderQuiz() {
   const p = state.quizPartner, page = QUIZ_PAGES[state.quizPage];
+  if (!state.quizStartMs[p]) state.quizStartMs[p] = Date.now();
   const paired = net.mode !== 'solo';
   const totalPages = QUIZ_PAGES.length;
   const pct = paired
@@ -722,6 +752,7 @@ function setAnswer(dimKey, i, v) {
   if (!state.answers[p][dimKey]) state.answers[p][dimKey] = [];
   state.answers[p][dimKey][i] = v;
   if (net.mode !== 'solo') { net.myProgress = countAnswered(p); send({ t: 'progress', n: net.myProgress }); }
+  persist();
 }
 
 function pageComplete() {
@@ -733,14 +764,38 @@ function pageComplete() {
 function quizNext() {
   if (!pageComplete()) { document.getElementById('quizWarn').style.display = 'block'; return; }
   if (state.quizPage < QUIZ_PAGES.length - 1) { state.quizPage++; render(); return; }
+  const p = state.quizPartner;
+  if (state.quizStartMs[p] && !state.quizMs[p]) state.quizMs[p] = Date.now() - state.quizStartMs[p];
   if (net.mode === 'solo') {
     if (state.quizPartner === 'A') go('handoff'); else go('modeb-intro');
   } else {
-    net.myQuizDone = true;
-    if (net.mode === 'guest') send({ t: 'quiz-done', answers: state.answers[net.myP] });
-    if (net.mode === 'host') hostMaybeTogether();
-    if (state.screen !== 'together') go('quiz-wait');
+    go('safety');
   }
+}
+
+function safetyDone() {
+  ['afraid', 'controlled'].forEach(k => {
+    const el = document.getElementById('sf-' + k);
+    if (el) net.safety[k] = el.checked;
+  });
+  net.myQuizDone = true;
+  if (net.mode === 'guest') send({ t: 'quiz-done', answers: state.answers[net.myP], ms: state.quizMs[net.myP] });
+  if (net.mode === 'host') hostMaybeTogether();
+  if (state.screen !== 'together') go('quiz-wait');
+}
+
+function renderSafety() {
+  app.innerHTML = dropBanner() + `
+    <span class="pill ${net.myP === 'A' ? 'badge-a' : 'badge-b'}">${esc(net.myName)}, just for you</span>
+    <div class="card" style="margin-top:12px">
+      <h3 style="margin-top:0">Two private questions before you finish</h3>
+      <p class="small">These stay on this phone only. They are never shown to your partner, never included in your shared results, and never leave this device. Answer honestly or skip them; either is fine.</p>
+      <div class="checkgrid">
+        <label><input type="checkbox" id="sf-afraid"><span>I sometimes feel afraid of my partner.</span></label>
+        <label><input type="checkbox" id="sf-controlled"><span>My partner controls where I go, who I see, or my access to money.</span></label>
+      </div>
+    </div>
+    <div class="nav"><span></span><button class="primary" onclick="safetyDone()">Continue</button></div>`;
 }
 
 function quizBack() {
@@ -914,7 +969,7 @@ function renderScenarioSolo() {
       <p class="small">Check all that apply. Honesty here, especially about your own behavior, is what makes the results real.</p>
       <div class="checkgrid">`;
     MARKERS.forEach(m => {
-      html += `<label><input type="checkbox" ${data[key][m.key] ? 'checked' : ''} onchange="state.scenarios[${idx}].${key}.${m.key}=this.checked"><span>${m.t}</span></label>`;
+      html += `<label><input type="checkbox" ${data[key][m.key] ? 'checked' : ''} onchange="state.scenarios[${idx}].${key}.${m.key}=this.checked;persist()"><span>${m.t}</span></label>`;
     });
     html += `</div></div>
       <div class="nav"><span></span><button class="primary" onclick="reflectNextSolo()">${ph === 3 ? 'Done. Pass to ' + pname('B') : (idx < SCENARIOS.length - 1 ? 'Next scenario' : 'Finish and see your results')}</button></div>`;
@@ -940,8 +995,23 @@ function renderReport(Rin) {
     amber: ['#FAEEDA','#854F0B'], coral: ['#FAECE7','#993C1D'], red: ['#FCEBEB','#A32D2D'] }[T.color];
   const flagStyle = { aligned: ['#E1F5EE','#0F6E56'], gap: ['#FAEEDA','#854F0B'], alert: ['#FCEBEB','#A32D2D'] };
 
-  let html = `<h1>Your Blueprint</h1>
-    <p class="muted">${pname('A')} &amp; ${pname('B')}: read together, out loud, with time to pause.</p>
+  const safetyFlagged = net.mode !== 'solo' && (net.safety.afraid || net.safety.controlled);
+  let html = '';
+  if (window.SAMPLE) html += `
+    <div class="card" style="background:var(--green-bg);border-color:var(--green)">
+      <p style="margin:0;font-size:14px;color:#27500A"><strong>This is a sample report</strong> for Maya and Jordan, a fictional couple, so you can see what you get before you start. Every number below is invented. <a href="test.html" onclick="location.href='test.html';location.reload();return false">Start your own</a> (free, about 15 minutes for part one, nothing stored anywhere).</p>
+    </div>`;
+  if (safetyFlagged) html += `
+    <div class="card" style="background:var(--red-bg);border-color:#F09595">
+      <p class="small" style="margin:0;color:#791F1F"><strong>A private note, visible only on your phone.</strong> You said you sometimes feel afraid or controlled. That deserves attention from someone whose only job is your safety, not a compatibility test. Talk to someone you trust, a counselor, or a domestic violence service; in the US, the hotline is 1-800-799-7233 (or text START to 88788), and thehotline.org has a live chat. If your device is monitored, consider using a safer one. This note is not part of your shared results and your partner cannot see it.</p>
+    </div>`;
+  html += `<h1>Your Blueprint</h1>
+    <p class="muted">${pname('A')} &amp; ${pname('B')}: read together, out loud, with time to pause.</p>`;
+  if (R.quick && R.quick.length) html += `
+    <div class="alertbox" style="background:var(--amber-bg)">
+      <span style="font-size:13px;color:var(--amber)"><strong>A caution before you read.</strong> ${R.quick.map(p => pname(p)).join(' and ')} completed the questionnaire very quickly. Fast answers are less reliable, so treat close calls in this report as conversation starters rather than findings.</span>
+    </div>`;
+  html += `
 
     <div class="card" style="border-top:4px solid ${tc[1]}">
       <p class="small" style="text-transform:uppercase;letter-spacing:0.5px">Your partnership type</p>
@@ -1014,13 +1084,117 @@ function renderReport(Rin) {
   <div class="card" style="background:var(--bg)">
     <p class="small" style="margin:0"><strong>Important.</strong> This is an unvalidated research prototype built on findings from published relationship science (Gottman &amp; Levenson; Karney &amp; Bradbury’s vulnerability-stress-adaptation model; Huston’s PAIR project; Olson’s ENRICH couple typology; attachment and Big Five meta-analyses). It is not a clinical instrument, not therapy, and not a verdict on your relationship. If this process surfaced something painful, a couples therapist is the right next step, and going early, before problems calcify, is what the evidence recommends. See the <a href="limitations.html">limitations page</a> for a full account of what this tool can and cannot tell you.</p>
   </div>
-  <div class="nav no-print"><button onclick="window.print()">Print / save as PDF</button>
-  <button class="primary" onclick="if(confirm('Start over? All answers will be erased.'))location.reload()">Start over</button></div>`;
+  <div class="nav no-print" style="flex-wrap:wrap">
+  <button class="primary" onclick="shareCard('${R.type}')">Share our type card</button>
+  <button onclick="window.print()">Print / save as PDF</button>
+  <button onclick="if(confirm('Start over? All answers will be erased.')){localStorage.removeItem('mb-save-v1');location.href='test.html';}">Start over</button></div>
+  <p class="small">The share card contains only your type name and a one-line strength. None of your answers, scores, or gaps are in it.</p>`;
 
   app.innerHTML = html;
 }
 
+// ---------- Shareable type card (canvas, nothing sensitive) ----------
+const CARDLINES = {
+  builders: 'Conflict-competent and building on purpose.',
+  harmonizers: 'Emotionally fluent, and learning to finish the hard talks.',
+  balancers: 'Steady across the board. Choosing on purpose is the edge.',
+  conventionals: 'Carried by shared values, building the conflict toolkit.',
+  pragmatists: 'A partnership that runs. Growing the warmth reserve.',
+  strivers: 'All-in, and building the skills to match.',
+  drifters: 'Deciding on purpose, with open eyes.',
+};
+function shareCard(typeKey) {
+  const T = TYPES[typeKey];
+  const palette = { teal: ['#E1F5EE', '#0F6E56'], blue: ['#E6F1FB', '#185FA5'], green: ['#EAF3DE', '#3B6D11'],
+    amber: ['#FAEEDA', '#854F0B'], coral: ['#FAECE7', '#993C1D'], red: ['#FCEBEB', '#A32D2D'] }[T.color];
+  const c = document.createElement('canvas'); c.width = 1080; c.height = 1080;
+  const x = c.getContext('2d');
+  x.fillStyle = '#FAF9F5'; x.fillRect(0, 0, 1080, 1080);
+  x.fillStyle = palette[0]; x.fillRect(0, 0, 1080, 340);
+  x.fillStyle = '#9AA5A8';
+  x.beginPath(); x.moveTo(420, 300); x.lineTo(540, 210); x.lineTo(660, 300); x.closePath(); x.fill();
+  x.fillStyle = '#A5556B';
+  x.beginPath(); x.arc(485, 330, 16, 0, 7); x.fill();
+  x.beginPath(); x.moveTo(462, 430); x.quadraticCurveTo(462, 352, 485, 352); x.quadraticCurveTo(508, 352, 508, 430); x.closePath(); x.fill();
+  x.fillStyle = '#5B7A99';
+  x.beginPath(); x.arc(595, 330, 16, 0, 7); x.fill();
+  x.beginPath(); x.moveTo(572, 430); x.quadraticCurveTo(572, 352, 595, 352); x.quadraticCurveTo(618, 352, 618, 430); x.closePath(); x.fill();
+  x.fillStyle = '#C25E6A';
+  x.beginPath(); x.moveTo(540, 380); x.bezierCurveTo(548, 366, 562, 372, 560, 386); x.bezierCurveTo(558, 398, 540, 408, 540, 408);
+  x.bezierCurveTo(540, 408, 522, 398, 520, 386); x.bezierCurveTo(518, 372, 532, 366, 540, 380); x.fill();
+  x.fillStyle = '#6b6a64'; x.font = '34px Helvetica, Arial, sans-serif'; x.textAlign = 'center';
+  x.fillText('Our partnership type', 540, 540);
+  x.fillStyle = '#1a1a18'; x.font = 'bold 84px Georgia, serif';
+  x.fillText(T.name, 540, 640);
+  x.fillStyle = palette[1]; x.font = '36px Helvetica, Arial, sans-serif';
+  x.fillText(T.share + ' of couples', 540, 700);
+  x.fillStyle = '#3a3a38'; x.font = 'italic 38px Georgia, serif';
+  const line = CARDLINES[typeKey];
+  if (x.measureText(line).width > 940) {
+    const words = line.split(' '); const mid = Math.ceil(words.length / 2);
+    x.fillText(words.slice(0, mid).join(' '), 540, 800);
+    x.fillText(words.slice(mid).join(' '), 540, 852);
+  } else { x.fillText(line, 540, 810); }
+  x.fillStyle = '#6b6a64'; x.font = '30px Helvetica, Arial, sans-serif';
+  x.fillText('The Marriage Blueprint', 540, 970);
+  x.fillText('marriage-blueprint.vercel.app', 540, 1014);
+  c.toBlob(blob => {
+    const file = new File([blob], 'our-type.png', { type: 'image/png' });
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: 'Our partnership type' }).catch(() => {});
+    } else {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'our-type.png'; a.click();
+    }
+  }, 'image/png');
+}
+
 function go(screen) { state.screen = screen; render(); }
+
+// ---------- Local save and resume (one-device mode only; nothing leaves the browser) ----------
+function persist() {
+  if (net.mode !== 'solo' || window.SAMPLE) return;
+  if (['intro', 'mode', 'pair-name'].includes(state.screen)) return;
+  try {
+    localStorage.setItem('mb-save-v1', JSON.stringify({
+      screen: state.screen, context: state.context, answers: state.answers,
+      scenarios: state.scenarios.map(s => ({ respA: s.respA, respB: s.respB, reflA: s.reflA, reflB: s.reflB })),
+      quizPartner: state.quizPartner, quizPage: state.quizPage,
+      scenIdx: state.scenIdx, scenPhase: state.scenPhase, quizMs: state.quizMs,
+    }));
+  } catch (e) {}
+}
+function loadSaved() {
+  try { return JSON.parse(localStorage.getItem('mb-save-v1')); } catch (e) { return null; }
+}
+function resumeSaved() {
+  const saved = loadSaved(); if (!saved) return;
+  net.mode = 'solo';
+  state.context = saved.context; state.answers = saved.answers;
+  (saved.scenarios || []).forEach((s, i) => Object.assign(state.scenarios[i], s));
+  state.quizPartner = saved.quizPartner; state.quizPage = saved.quizPage;
+  state.scenIdx = saved.scenIdx; state.scenPhase = saved.scenPhase;
+  state.quizMs = saved.quizMs || { A: null, B: null };
+  state.screen = saved.screen; render();
+}
+function discardSaved() { localStorage.removeItem('mb-save-v1'); render(); }
+
+// ---------- Sample report (fictional couple, linked from the landing page) ----------
+function loadSample() {
+  window.SAMPLE = true; net.mode = 'solo';
+  state.context = { nameA: 'Maya', nameB: 'Jordan', duration: '1-3', cohab: 'yes', ses: 'ok', kidsIntent: 'differ' };
+  DIMENSIONS.forEach(d => {
+    state.answers.A[d.key] = d.items.map((it, i) => it.r ? 2 : [4, 5, 4, 3, 4][i % 5]);
+    state.answers.B[d.key] = d.items.map((it, i) => it.r ? 3 : [3, 4, 4, 4, 3][i % 5]);
+  });
+  state.answers.A.FIN = DIMENSIONS.find(d => d.key === 'FIN').items.map(() => 2);
+  state.scenarios.forEach((s, i) => {
+    s.respA = '(sample response)'; s.respB = '(sample response)';
+    s.reflA = { soft: true, repair: i < 4, accepted: true, resolved: i < 2, stonewall: i === 3 };
+    s.reflB = { soft: i % 2 === 0, defensive: i === 0, accepted: i < 5, resolved: i < 2 };
+  });
+  state.screen = 'report'; renderReport();
+}
 
 // Deep link: test.html#join=CODE (or ?join=CODE) goes straight to the join screen.
 const hashMatch = location.hash.match(/join=([A-Za-z0-9]{6})/);
@@ -1029,7 +1203,7 @@ if (joinParam && joinParam.length === 6) {
   net.pendingRole = 'join'; net.prefillCode = joinParam.toUpperCase();
   state.screen = 'pair-name';
 }
-render();
+if (location.hash.includes('sample')) loadSample(); else render();
 </script>
 </body>
 </html>

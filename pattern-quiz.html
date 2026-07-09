@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What is your pattern? A 3-minute solo quiz | The Marriage Blueprint</title>
+<link rel="stylesheet" href="styles.css">
+<meta name="description" content="Six quick questions, one partner, three honest insights about how you show up in conflict, repair, and commitment. Then get the full picture together with the Marriage Blueprint.">
+<link rel="canonical" href="https://marriage-blueprint.vercel.app/pattern-quiz.html">
+<meta property="og:site_name" content="The Marriage Blueprint">
+<meta property="og:title" content="What is your pattern? A 3-minute solo quiz">
+<meta property="og:description" content="Six quick questions, one partner, three honest insights about how you show up in conflict, repair, and commitment.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://marriage-blueprint.vercel.app/pattern-quiz.html">
+<meta property="og:image" content="https://marriage-blueprint.vercel.app/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  .q { margin-bottom: 8px; }
+  .opt { display: block; width: 100%; text-align: left; padding: 14px 16px; margin-bottom: 10px; font-size: 15px; border: 1px solid var(--hair); border-radius: 10px; background: var(--card); cursor: pointer; }
+  .opt:hover { border-color: var(--green); }
+  .progress { height: 4px; background: var(--hair); border-radius: 2px; margin-bottom: 24px; }
+  .progress div { height: 100%; background: var(--ink); border-radius: 2px; transition: width 0.3s; }
+  .res { border-left: 3px solid var(--green); border-radius: 0; padding: 4px 0 4px 16px; margin-bottom: 18px; }
+  .res h3 { margin: 0 0 4px; }
+  .res p { margin: 0; font-size: 14px; color: var(--muted); }
+</style>
+</head>
+<body>
+<nav class="topnav"><div class="inner">
+  <a class="brand" href="index.html">The Marriage Blueprint</a>
+  <a href="index.html">Home</a>
+  <a href="test.html">Take the test</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="limitations.html">Limitations</a>
+  <a href="blog.html">Blog</a>
+</div></nav>
+
+<div class="wrap" id="app"></div>
+
+<script>
+const QS = [
+  { q: 'Mid-argument, your honest instinct is to…', dim: 'conflict',
+    a: 'Stay in it and push toward a resolution, now.', b: 'Step away and come back when things are cooler.' },
+  { q: 'After a fight, peace usually returns through…', dim: 'repair',
+    a: 'Talking it through properly, out loud.', b: 'Warmth first: a touch, a joke, tea. Words later, maybe.' },
+  { q: 'Which would unsettle you more?', dim: 'load',
+    a: 'Feeling emotionally distant from my partner.', b: 'Discovering we disagree about money or the future.' },
+  { q: 'Your partner picks up their phone mid-story. You…', dim: 'conflict',
+    a: 'Name it, right away, gently or not.', b: 'Let it slide, and quietly file it away.' },
+  { q: 'Big decisions between you (moving, money, plans) tend to…', dim: 'choice',
+    a: 'Get decided together, explicitly, out loud.', b: 'Sort of happen, and get acknowledged afterward.' },
+  { q: 'When you imagine being married, it feels like…', dim: 'choice',
+    a: 'A choice you keep making, on purpose, for years.', b: 'A milestone that arrives when it arrives.' },
+];
+
+const state = { i: 0, ans: [] };
+const app = document.getElementById('app');
+
+function render() {
+  window.scrollTo(0, 0);
+  if (state.i < QS.length) {
+    const q = QS[state.i];
+    app.innerHTML = `
+      <div class="progress"><div style="width:${state.i / QS.length * 100}%"></div></div>
+      <p class="small">Question ${state.i + 1} of 6 · solo, about 3 minutes</p>
+      <h2 style="margin-top:4px" class="q">${q.q}</h2>
+      <p class="muted" style="margin-bottom:18px">Answer with your instinct, not your ideal.</p>
+      <button class="opt" onclick="pick('a')">${q.a}</button>
+      <button class="opt" onclick="pick('b')">${q.b}</button>
+      ${state.i === 0 ? '<p class="small" style="margin-top:16px">One partner, six questions, nothing stored anywhere. This is a taste of the full assessment, not a verdict on anything.</p>' : ''}`;
+  } else {
+    renderResult();
+  }
+}
+
+function pick(v) { state.ans.push(v); state.i++; render(); }
+
+function renderResult() {
+  const byDim = {};
+  QS.forEach((q, i) => { byDim[q.dim] = byDim[q.dim] || []; byDim[q.dim].push(state.ans[i]); });
+  const conflictLean = byDim.conflict.filter(v => v === 'a').length >= 1 && byDim.conflict[0] === 'a' ? 'engage' : (byDim.conflict.every(v => v === 'b') ? 'retreat' : 'mixed');
+  const repair = byDim.repair[0] === 'a' ? 'words' : 'warmth';
+  const load = byDim.load[0] === 'a' ? 'emotional' : 'practical';
+  const choiceCount = byDim.choice.filter(v => v === 'a').length;
+
+  const conflictText = {
+    engage: ['You move toward the fire', 'Your instinct in conflict is to engage: raise it, stay in it, finish it. That is a strength when your partner can meet you there, and overwhelming when they need space. The question worth asking: does your partner experience your engagement as pursuit or as pressure?'],
+    retreat: ['You step back from the fire', 'Your instinct in conflict is to cool down before you engage. That protects you both from things said in heat, and it can leave issues permanently postponed. The question worth asking: do you actually come back, or does stepping away quietly become dropping it?'],
+    mixed: ['You read the fire before you act', 'You engage sometimes and step back sometimes, which usually means you are responding to the topic and the temperature rather than running one script. The question worth asking: does your partner know which version of you to expect?'],
+  }[conflictLean];
+  const repairText = repair === 'words'
+    ? ['You repair with words', 'Peace, for you, is something that gets talked into existence. Just know that some partners repair through warmth first and words much later, and their olive branch can be easy to miss if you are waiting for a sentence.']
+    : ['You repair with warmth', 'Your olive branches are gestures: a touch, a joke, made tea, a lighter voice. Real, and easy for a words-first partner to miss entirely. Research finding worth knowing: what predicts stability is not making repair attempts, it is whether they get recognized and accepted.'];
+  const loadText = load === 'emotional'
+    ? ['You guard the emotional floor', 'Distance scares you more than disagreement. You will likely notice erosion in closeness long before your partner does, which makes you the early-warning system, if you say what you see.']
+    : ['You guard the practical floor', 'Misalignment on money and the future unsettles you more than a distant week. You will likely push for the concrete conversations, which is valuable, as long as the emotional temperature gets checked too.'];
+  const choiceText = choiceCount === 2
+    ? ['You are a chooser', 'You treat the relationship as something decided on purpose, repeatedly. The research is on your side: couples who decide rather than slide do better across every transition.']
+    : choiceCount === 1
+    ? ['You choose some of it', 'Some things you decide together on purpose; some things just happen and get ratified later. Worth noticing which category the big ones fall into, because sliding through major transitions is one of the quietest predictors of trouble.']
+    : ['You may be drifting', 'Things tend to happen rather than get decided. That can feel easy and romantic, and it is also the pattern research associates with couples who wake up somewhere they never chose. The fix is not dramatic: it is deciding the next big thing out loud.'];
+
+  app.innerHTML = `
+    <div class="progress"><div style="width:100%"></div></div>
+    <h1>Your pattern, in three lines</h1>
+    <p class="muted">One lens, one partner, six questions. Hold it lightly.</p>
+    <div class="card">
+      <div class="res"><h3>${conflictText[0]}</h3><p>${conflictText[1]}</p></div>
+      <div class="res"><h3>${repairText[0]}</h3><p>${repairText[1]}</p></div>
+      <div class="res"><h3>${loadText[0]}</h3><p>${loadText[1]}</p></div>
+      <div class="res" style="margin-bottom:0"><h3>${choiceText[0]}</h3><p>${choiceText[1]}</p></div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--green)">
+      <h3 style="margin-top:0">Here is the thing about this quiz</h3>
+      <p>It measured one of you. A relationship is a system: your retreat means something different next to a pursuer than next to another retreater, and your repair style only works if your partner recognizes it. The full Marriage Blueprint maps eleven research-backed dimensions for <em>both</em> of you, plus six guided scenario conversations, and it takes about 90 minutes together.</p>
+      <p style="margin-bottom:0">
+        <a class="btn primary" href="test.html">Take the full test together</a>
+        &nbsp;<button onclick="invite()">Send this to your partner</button>
+      </p>
+      <p class="small" id="copied" style="display:none;margin:10px 0 0;color:var(--green)">Link copied. Paste it to your partner.</p>
+    </div>
+    <p class="small">Free, private, nothing stored on any server. Built on published longitudinal research; see the <a href="methodology.html">methodology</a>.</p>`;
+}
+
+function invite() {
+  const url = 'https://marriage-blueprint.vercel.app/pattern-quiz.html';
+  const text = 'Took this 3-minute relationship pattern quiz. Try it, then let’s do the full one together: ' + url;
+  if (navigator.share) { navigator.share({ text }).catch(() => {}); }
+  else { navigator.clipboard.writeText(text).then(() => { document.getElementById('copied').style.display = 'block'; }); }
+}
+
+render();
+</script>
+</body>
+</html>
