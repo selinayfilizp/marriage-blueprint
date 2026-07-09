@@ -381,6 +381,17 @@ function computeResults() {
 }
 
 // ---------- Networking (PeerJS, peer-to-peer) ----------
+// STUN finds a direct path between the two phones; TURN relays the
+// encrypted stream when a network blocks direct connections (hotel or
+// office wifi, some mobile carriers). Content is end-to-end encrypted
+// either way; a relay cannot read it.
+const PEER_OPTS = { config: { iceServers: [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
+] } };
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 function makeCode() { let c = ''; for (let i = 0; i < 6; i++) c += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]; return c; }
 function peerId(code) { return 'mblueprint-' + code.toUpperCase(); }
@@ -396,7 +407,7 @@ function wireConn(conn) {
 
 function startHost() {
   net.mode = 'host'; net.myP = 'A'; net.code = makeCode();
-  net.peer = new Peer(peerId(net.code));
+  net.peer = new Peer(peerId(net.code), PEER_OPTS);
   net.peer.on('open', () => { state.screen = 'pair-host'; render(); });
   net.peer.on('error', (e) => {
     if (e.type === 'unavailable-id') { net.code = makeCode(); net.peer.destroy(); startHost(); return; }
@@ -415,7 +426,7 @@ function startHost() {
 
 function startGuest(code) {
   net.mode = 'guest'; net.myP = 'B'; net.code = code.toUpperCase();
-  net.peer = new Peer();
+  net.peer = new Peer(PEER_OPTS);
   net.peer.on('error', () => { net.dropped = true; render(); });
   net.peer.on('open', () => {
     const conn = net.peer.connect(peerId(net.code), { reliable: true });
