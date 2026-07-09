@@ -19,11 +19,12 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-  .likert { display: flex; gap: 6px; margin: 8px 0 4px; }
-  .likert label { flex: 1; text-align: center; border: 1px solid var(--hair); border-radius: 8px; padding: 10px 4px; font-size: 12px; cursor: pointer; background: var(--card); color: var(--muted); }
+  .likert { display: flex; gap: 6px; margin: 8px 0 4px; align-items: stretch; }
+  .likert label { flex: 1; text-align: center; border: 1px solid var(--hair); border-radius: 8px; padding: 10px 2px 6px; cursor: pointer; background: var(--card); color: var(--muted); }
   .likert input { display: none; }
   .likert label:has(input:checked) { background: var(--ink); color: #fff; border-color: var(--ink); }
-  .likert .lk-num { display: none; font-size: 15px; font-weight: 600; }
+  .likert .lk-num { display: block; font-size: 16px; font-weight: 600; }
+  .likert .lk-end { display: block; font-size: 10px; line-height: 1.25; margin-top: 3px; min-height: 13px; opacity: 0.8; }
   .item { padding: 14px 0; border-bottom: 1px solid var(--hair); }
   .item:last-child { border-bottom: none; }
   .item p { margin: 0 0 4px; font-size: 15px; }
@@ -60,9 +61,6 @@
   @media (max-width: 620px) {
     .row { flex-direction: column; }
     .likert { gap: 4px; }
-    .likert label { padding: 12px 2px; }
-    .likert .lk-word { display: none; }
-    .likert .lk-num { display: block; }
     .dimrow { grid-template-columns: 105px 1fr 54px; gap: 8px; }
     .codebox { font-size: 26px; letter-spacing: 7px; }
     h1 { font-size: 24px; }
@@ -485,6 +483,7 @@ function onMsg(msg) {
   if (msg.t === 'reveal') { state.scenarios[msg.idx].respA = msg.respA; state.scenarios[msg.idx].respB = msg.respB; state.screen = 'sc-reveal'; render(); }
   if (msg.t === 'ready') { net.partnerReady = true; hostMaybeReflect(); if (state.screen === 'sc-reveal') render(); }
   if (msg.t === 'reflect') { state.screen = 'sc-reflect'; render(); }
+  if (msg.t === 'break') { state.screen = 'sc-break'; render(); }
   if (msg.t === 'refl') { state.scenarios[msg.idx]['refl' + otherP()] = msg.flags; net.partnerRefl = true; hostMaybeNext(); if (state.screen === 'sc-wait') render(); }
   if (msg.t === 'report') { state.context = msg.context; state.scenarios = msg.scenarios; state.screen = 'report'; renderReport(msg.results); }
 }
@@ -512,7 +511,11 @@ function hostMaybeReflect() {
 function hostMaybeNext() {
   if (net.mode !== 'host') return;
   if (!(net.myRefl && net.partnerRefl)) return;
-  if (state.scenIdx < SCENARIOS.length - 1) {
+  if (state.scenIdx === 2 && !state.breakShown) {
+    state.breakShown = true;
+    send({ t: 'break' });
+    state.screen = 'sc-break'; render();
+  } else if (state.scenIdx < SCENARIOS.length - 1) {
     const next = state.scenIdx + 1;
     send({ t: 'scenario', idx: next });
     state.scenIdx = next; resetScFlags(); state.screen = 'sc-write'; render();
@@ -541,6 +544,7 @@ function render() {
   if (s === 'quiz-wait') return renderQuizWait();
   if (s === 'together') return renderTogether();
   if (s === 'sc-write') return renderScWrite();
+  if (s === 'sc-break') return renderScBreak();
   if (s === 'sc-wait') return renderScWait();
   if (s === 'sc-reveal') return renderScReveal();
   if (s === 'sc-reflect') return renderScReflect();
@@ -572,7 +576,7 @@ function renderIntro() {
       <p>This is a mirror, not a judge. It will never tell you whether to marry. It will show you the patterns research says matter most, so you can decide with open eyes.</p>
       <p>It has two parts. <strong>Part one</strong> (about 15 minutes): you each answer your own questionnaire, at the same time, on your own phones. <strong>Part two</strong> (45-55 minutes): six scenario conversations. You each write your honest response privately, then your screens reveal both answers at the same moment, and you talk it through face to face.</p>
       <p>Best taken while you are seriously dating, <em>before</em> an engagement. Research on 13-year couple trajectories shows the patterns visible now predict what comes later, and it is easier to act on what you learn before the ring changes the stakes.</p>
-      <p class="small">Nothing is stored on any server. In a paired session your answers travel directly between your two devices and live only in your browsers. Refreshing the page erases your progress. This is an unvalidated research prototype, not a clinical instrument, and not a substitute for professional counseling. Read the <a href="limitations.html">limitations</a> before you start.</p>
+      <p class="small">Nothing is stored on any server. In a paired session your answers travel directly between your two devices and live only in your browsers; in one-device mode your progress is saved in this browser so you can resume. At the very end you can optionally contribute anonymized scores (never names, never anything you wrote) to research validation. This is an unvalidated research prototype, not a clinical instrument, and not a substitute for professional counseling. Read the <a href="limitations.html">limitations</a> before you start.</p>
     </div>
     <button class="primary" onclick="go('mode')">Start</button>`;
 }
@@ -732,9 +736,9 @@ function renderQuiz() {
     dim.items.forEach((it, i) => {
       const cur = (state.answers[p][dim.key] || [])[i];
       html += `<div class="item"><p>${it.t}</p><div class="likert">`;
-      ['Strongly disagree','Disagree','Neutral','Agree','Strongly agree'].forEach((lab, vi) => {
-        const v = vi + 1;
-        html += `<label><input type="radio" name="${dim.key}_${i}" value="${v}" ${cur === v ? 'checked' : ''} onchange="setAnswer('${dim.key}',${i},${v})"><span class="lk-word">${lab}</span><span class="lk-num">${v}</span></label>`;
+      [1, 2, 3, 4, 5].forEach(v => {
+        const end = v === 1 ? 'strongly disagree' : v === 5 ? 'strongly agree' : '';
+        html += `<label><input type="radio" name="${dim.key}_${i}" value="${v}" ${cur === v ? 'checked' : ''} onchange="setAnswer('${dim.key}',${i},${v})"><span class="lk-num">${v}</span><span class="lk-end">${end}</span></label>`;
       });
       html += `</div></div>`;
     });
@@ -856,6 +860,22 @@ function submitResp() {
   if (net.mode === 'guest') { send({ t: 'resp', idx, text }); }
   if (net.mode === 'host') { hostMaybeReveal(idx); }
   if (state.screen === 'sc-write') { state.screen = 'sc-wait'; net.waitWhat = 'their response'; render(); }
+}
+
+function renderScBreak() {
+  const isHost = net.mode === 'host';
+  const cont = net.mode === 'solo'
+    ? `<button class="primary" onclick="state.scenIdx=3;state.scenPhase=0;go('scenario')">We’re back. Scenario 4</button>`
+    : isHost
+    ? `<button class="primary" onclick="send({t:'scenario',idx:3});state.scenIdx=3;resetScFlags();go('sc-write')">We’re back. Scenario 4</button>`
+    : `<p class="small" style="margin:0"><span class="pulse"></span>${esc(net.otherName || 'Your partner')} continues it when you are both ready.</p>`;
+  app.innerHTML = dropBanner() + `
+    <div class="card center" style="padding:44px 24px;border-top:4px solid var(--green)">
+      <h2 style="margin-top:0">Halfway. Take a breather.</h2>
+      <p class="muted">Three scenarios done, three to go. The research on hard conversations is clear: quality drops when people get flooded. Stand up, get water, talk about anything else for ten minutes.</p>
+      <p class="small">The next three (children, career, phones) tend to run deeper than the first three. Come back fresh.</p>
+      ${cont}
+    </div>`;
 }
 
 function renderScWait() {
@@ -983,6 +1003,7 @@ function saveRespSolo(key) {
 }
 function reflectNextSolo() {
   if (state.scenPhase === 3) { state.scenPhase = 4; render(); return; }
+  if (state.scenIdx === 2 && !state.breakShown) { state.breakShown = true; go('sc-break'); return; }
   if (state.scenIdx < SCENARIOS.length - 1) { state.scenIdx++; state.scenPhase = 0; render(); }
   else go('report');
 }
@@ -1081,6 +1102,12 @@ function renderReport(Rin) {
     <p class="small" style="margin-top:14px"><strong>Retake in 6 months.</strong> Work the plan, then reassess. Types can shift; couples who close their gaps early tend to move toward the Builder profile.</p>
   </div>
 
+  ${window.SAMPLE ? '' : `<div class="card">
+    <p class="small" style="text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Help validate this instrument</p>
+    <p style="font-size:14px">This tool becomes trustworthy only when real couples' anonymized scores let researchers test whether the types and forecasts actually hold. If you contribute, exactly this is sent: your dimension scores, behavioral tallies, type, and coarse context (relationship length, cohabitation, financial band, children intent). Never sent: your names, anything you wrote, your private safety answers, or anything that could identify you.</p>
+    <button onclick="donate(this)">Contribute our anonymized scores</button>
+    <span class="small" id="donateMsg" style="margin-left:10px"></span>
+  </div>`}
   <div class="card" style="background:var(--bg)">
     <p class="small" style="margin:0"><strong>Important.</strong> This is an unvalidated research prototype built on findings from published relationship science (Gottman &amp; Levenson; Karney &amp; Bradbury’s vulnerability-stress-adaptation model; Huston’s PAIR project; Olson’s ENRICH couple typology; attachment and Big Five meta-analyses). It is not a clinical instrument, not therapy, and not a verdict on your relationship. If this process surfaced something painful, a couples therapist is the right next step, and going early, before problems calcify, is what the evidence recommends. See the <a href="limitations.html">limitations page</a> for a full account of what this tool can and cannot tell you.</p>
   </div>
@@ -1091,6 +1118,26 @@ function renderReport(Rin) {
   <p class="small">The share card contains only your type name and a one-line strength. None of your answers, scores, or gaps are in it.</p>`;
 
   app.innerHTML = html;
+  window._lastR = R;
+}
+
+// ---------- Research donation (opt-in, anonymized scores only) ----------
+function donate(btn) {
+  const R = window._lastR; if (!R) return;
+  btn.disabled = true;
+  const msg = document.getElementById('donateMsg');
+  msg.textContent = 'Sending…';
+  const band = ms => ms == null ? 'na' : ms < 150000 ? 'fast' : ms < 600000 ? 'normal' : 'slow';
+  const payload = {
+    v: '0.3', mode: net.mode, type: R.type, trajectory: R.trajectory, forecast: R.forecast,
+    context: { duration: state.context.duration, cohab: state.context.cohab, ses: state.context.ses, kidsIntent: state.context.kidsIntent },
+    dims: R.dims.map(d => ({ key: d.key, a: d.a, b: d.b })),
+    tally: R.tally, repairAcceptRate: R.repairAcceptRate, resolutionRate: R.resolutionRate,
+    quizMsBand: [band(state.quizMs.A), band(state.quizMs.B)],
+  };
+  fetch('/api/donate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+    .then(r => { msg.textContent = r.ok ? 'Thank you. Scores received, nothing identifying included.' : 'Could not send right now.'; if (!r.ok) btn.disabled = false; })
+    .catch(() => { msg.textContent = 'Could not send right now.'; btn.disabled = false; });
 }
 
 // ---------- Shareable type card (canvas, nothing sensitive) ----------
