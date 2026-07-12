@@ -48,7 +48,7 @@
   .gapband { position: absolute; top: 7px; height: 12px; border-radius: 3px; }
   .alertbox { border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; font-size: 14px; }
   .center { text-align: center; }
-  .codebox { font-size: 34px; letter-spacing: 10px; font-weight: 600; text-align: center; padding: 14px 0 14px 10px; background: var(--bg); border-radius: 12px; margin: 12px 0; }
+  .codebox { font-size: 24px; letter-spacing: 3px; font-weight: 600; text-align: center; padding: 14px 6px; background: var(--bg); border-radius: 12px; margin: 12px 0; font-family: ui-monospace, Menlo, monospace; }
   #qr { display: flex; justify-content: center; margin: 16px 0; }
   #qr img, #qr canvas { border: 10px solid #fff; border-radius: 8px; }
   .pulse { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--green); margin-right: 8px; animation: pu 1.2s infinite; vertical-align: 1px; }
@@ -62,7 +62,7 @@
     .row { flex-direction: column; }
     .likert { gap: 4px; }
     .dimrow { grid-template-columns: 105px 1fr 54px; gap: 8px; }
-    .codebox { font-size: 26px; letter-spacing: 7px; }
+    .codebox { font-size: 18px; letter-spacing: 2px; }
     h1 { font-size: 24px; }
   }
   @media print { button, .nav, .progress, .topnav, .partnerbar { display: none !important; } body { background: #fff; } }
@@ -261,7 +261,8 @@ const state = {
 const net = {
   mode: 'solo',            // 'solo' | 'host' | 'guest'
   peer: null, conn: null,
-  code: '', myName: '', otherName: '',
+  code: '', secret: '', myName: '', otherName: '',
+  seqOut: 0, saidHi: false, lastProgressSent: 0,
   myP: 'A',                // host is A, guest is B
   connected: false, dropped: false,
   myQuizDone: false, partnerQuizDone: false, partnerProgress: 0, myProgress: 0,
@@ -407,11 +408,16 @@ function computeResults() {
   return { dims, tally, horsemen, repairAcceptRate, repairMadeCount, resolutionRate, emotional, practical, conflictSkill, overall, type, trajectory, forecast, risks, protectives, plan, quick };
 }
 
-// ---------- Networking (PeerJS, peer-to-peer) ----------
-// STUN finds a direct path between the two phones; TURN relays the
-// encrypted stream when a network blocks direct connections (hotel or
-// office wifi, some mobile carriers). Content is end-to-end encrypted
-// either way; a relay cannot read it.
+// ---------- Networking: encrypted relay, with direct P2P as a bonus ----------
+// Pairing always works through an end-to-end encrypted relay on this
+// site's own backend. The encryption key travels only inside the QR
+// code / join code, so the relay stores ciphertext it cannot read,
+// and the session is deleted when the couple finishes. Any networks
+// work: same wifi, different wifi, mobile data, different cities.
+// When the two devices can also reach each other directly (WebRTC),
+// traffic upgrades to the direct path automatically and the relay
+// goes quiet; if the direct path drops, the relay takes over again.
+const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'https://marriage-blueprint.vercel.app' : '';
 const PEER_OPTS = { config: { iceServers: [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
@@ -420,59 +426,146 @@ const PEER_OPTS = { config: { iceServers: [
   { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
 ] } };
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-function makeCode() { let c = ''; for (let i = 0; i < 6; i++) c += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]; return c; }
+function makeCode(n) { let c = ''; for (let i = 0; i < n; i++) c += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]; return c; }
 function peerId(code) { return 'mblueprint-' + code.toUpperCase(); }
 
-function send(msg) { if (net.conn && net.conn.open) net.conn.send(msg); }
+const b64 = a => btoa(String.fromCharCode.apply(null, a));
+const unb64 = s => new Uint8Array(atob(s).split('').map(ch => ch.charCodeAt(0)));
+
+function deriveRelayKey(secret) {
+  return crypto.subtle.importKey('raw', new TextEncoder().encode(secret + ':mb-relay-v1'), 'PBKDF2', false, ['deriveKey'])
+    .then(base => crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt: new TextEncoder().encode('marriage-blueprint-relay'), iterations: 120000, hash: 'SHA-256' },
+      base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']));
+}
+async function encMsg(key, obj) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(JSON.stringify(obj)));
+  return { iv: b64(iv), data: b64(new Uint8Array(ct)) };
+}
+async function decMsg(key, m) {
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(m.iv) }, key, unb64(m.data));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+
+const RELAY = { key: null, keyPromise: null, active: false, timer: null, polling: false, fails: 0, out: Promise.resolve(), done: false };
+const INBOX = { A: { next: 1, buf: {} }, B: { next: 1, buf: {} } };
+
+function relayStart() {
+  if (!net.secret) return; // legacy 6-char link: direct P2P only
+  RELAY.keyPromise = deriveRelayKey(net.secret);
+  RELAY.keyPromise.then(k => { RELAY.key = k; });
+  RELAY.active = true;
+  relayPoll();
+  RELAY.timer = setInterval(relayPoll, 2000);
+}
+function relayStop() { RELAY.active = false; RELAY.done = true; clearInterval(RELAY.timer); }
+function relayFinish() {
+  relayStop();
+  fetch(API_BASE + '/api/session?sid=' + net.code, { method: 'DELETE' }).catch(() => {});
+}
+async function relayPoll() {
+  if (!RELAY.active || RELAY.polling) return;
+  RELAY.polling = true;
+  try {
+    const key = await RELAY.keyPromise;
+    const r = await fetch(API_BASE + '/api/session?sid=' + net.code + '&a=' + (INBOX.A.next - 1) + '&b=' + (INBOX.B.next - 1));
+    if (!r.ok) throw new Error('poll failed');
+    const arr = await r.json();
+    RELAY.fails = 0;
+    if (net.dropped) { net.dropped = false; render(); }
+    for (const m of arr) {
+      if (!m || m.from === net.myP) continue;
+      try { deliver(m.from, m.seq, await decMsg(key, m)); } catch (e) {}
+    }
+  } catch (e) {
+    RELAY.fails++;
+    if (RELAY.fails >= 8 && !p2pOpen() && !net.dropped) { net.dropped = true; render(); }
+  } finally { RELAY.polling = false; }
+}
+function relaySend(msg, seq) {
+  if (!RELAY.active) return;
+  RELAY.out = RELAY.out.then(async () => {
+    const key = await RELAY.keyPromise;
+    const enc = await encMsg(key, msg);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const r = await fetch(API_BASE + '/api/session', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sid: net.code, from: net.myP, seq, iv: enc.iv, data: enc.data }) });
+        if (r.ok) return;
+      } catch (e) {}
+      await new Promise(res => setTimeout(res, 800 * (attempt + 1)));
+    }
+  }).catch(() => {});
+}
+
+function p2pOpen() { return !!(net.conn && net.conn.open); }
+
+function send(msg) {
+  msg.__from = net.myP; msg.__seq = ++net.seqOut;
+  if (p2pOpen()) { try { net.conn.send(msg); return; } catch (e) {} }
+  relaySend(msg, msg.__seq);
+}
+
+// Messages can arrive over either transport; deliver them exactly once,
+// in order, buffering any gaps until the missing message shows up.
+function deliver(from, seq, msg) {
+  const box = INBOX[from]; if (!box || !seq || seq < box.next) return;
+  box.buf[seq] = msg;
+  while (box.buf[box.next]) {
+    const m = box.buf[box.next]; delete box.buf[box.next]; box.next++;
+    onMsg(m);
+  }
+}
 
 function wireConn(conn) {
   net.conn = conn;
-  conn.on('data', onMsg);
-  conn.on('close', () => { net.dropped = true; net.connected = false; render(); });
-  conn.on('error', () => { net.dropped = true; net.connected = false; render(); });
+  conn.on('data', m => { if (m && m.__from && m.__seq) deliver(m.__from, m.__seq, m); });
+  conn.on('close', () => { if (!RELAY.active && !RELAY.done) { net.dropped = true; render(); } });
+  conn.on('error', () => {});
 }
 
+function sayHi() { if (net.saidHi) return; net.saidHi = true; send({ t: 'hi', name: net.myName }); }
+
 function startHost() {
-  net.mode = 'host'; net.myP = 'A'; net.code = makeCode();
-  net.peer = new Peer(peerId(net.code), PEER_OPTS);
-  net.peer.on('open', () => { state.screen = 'pair-host'; render(); });
-  net.peer.on('error', (e) => {
-    if (e.type === 'unavailable-id') { net.code = makeCode(); net.peer.destroy(); startHost(); return; }
-    net.dropped = true; render();
-  });
-  net.peer.on('connection', (conn) => {
-    wireConn(conn);
-    conn.on('open', () => {
-      net.connected = true;
-      send({ t: 'hi', name: net.myName });
-      render();
-    });
-  });
+  net.mode = 'host'; net.myP = 'A';
+  net.code = makeCode(6); net.secret = makeCode(8);
+  relayStart();
+  try {
+    net.peer = new Peer(peerId(net.code), PEER_OPTS);
+    net.peer.on('error', () => {});
+    net.peer.on('connection', (conn) => { wireConn(conn); });
+  } catch (e) { net.peer = null; }
   state.screen = 'pair-host'; render();
 }
 
-function startGuest(code) {
-  net.mode = 'guest'; net.myP = 'B'; net.code = code.toUpperCase();
-  net.peer = new Peer(PEER_OPTS);
-  net.peer.on('error', () => { net.dropped = true; render(); });
-  net.peer.on('open', () => {
-    const conn = net.peer.connect(peerId(net.code), { reliable: true });
-    wireConn(conn);
-    conn.on('open', () => {
-      net.connected = true;
-      send({ t: 'hi', name: net.myName });
-      state.screen = 'wait-context'; render();
+function startGuest(fullCode) {
+  const digits = fullCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  net.mode = 'guest'; net.myP = 'B';
+  net.code = digits.slice(0, 6);
+  net.secret = digits.slice(6, 14) || '';
+  relayStart();
+  if (net.secret) sayHi(); // over the relay; arrives even with no direct path
+  try {
+    net.peer = new Peer(PEER_OPTS);
+    net.peer.on('error', () => {});
+    net.peer.on('open', () => {
+      const conn = net.peer.connect(peerId(net.code), { reliable: true });
+      wireConn(conn);
+      conn.on('open', () => { sayHi(); });
     });
-  });
+  } catch (e) {}
   state.screen = 'pair-guest-connecting'; render();
 }
 
 function onMsg(msg) {
   if (msg.t === 'hi') {
     net.otherName = msg.name || '';
+    net.connected = true;
     state.context.nameA = net.mode === 'host' ? net.myName : net.otherName;
     state.context.nameB = net.mode === 'host' ? net.otherName : net.myName;
-    if (net.mode === 'host') { state.screen = 'context'; render(); }
+    if (net.mode === 'host') { sayHi(); state.screen = 'context'; render(); }
+    if (net.mode === 'guest') { state.screen = 'wait-context'; render(); }
   }
   if (msg.t === 'context') { state.context = msg.context; state.screen = 'quiz'; state.quizPage = 0; state.quizPartner = net.myP; render(); }
   if (msg.t === 'progress') { net.partnerProgress = msg.n; const el = document.getElementById('pbar'); if (el) { el.style.width = Math.round(msg.n / net.totalItems * 100) + '%'; const lbl = document.getElementById('plbl'); if (lbl) lbl.textContent = esc(net.otherName || 'Your partner') + ': ' + msg.n + '/' + net.totalItems; } }
@@ -485,7 +578,7 @@ function onMsg(msg) {
   if (msg.t === 'reflect') { state.screen = 'sc-reflect'; render(); }
   if (msg.t === 'break') { state.screen = 'sc-break'; render(); }
   if (msg.t === 'refl') { state.scenarios[msg.idx]['refl' + otherP()] = msg.flags; net.partnerRefl = true; hostMaybeNext(); if (state.screen === 'sc-wait') render(); }
-  if (msg.t === 'report') { state.context = msg.context; state.scenarios = msg.scenarios; state.screen = 'report'; renderReport(msg.results); }
+  if (msg.t === 'report') { relayFinish(); state.context = msg.context; state.scenarios = msg.scenarios; state.screen = 'report'; renderReport(msg.results); }
 }
 
 function resetScFlags() { net.myReady = false; net.partnerReady = false; net.myRefl = false; net.partnerRefl = false; }
@@ -522,6 +615,7 @@ function hostMaybeNext() {
   } else {
     const results = computeResults();
     send({ t: 'report', results, scenarios: state.scenarios, context: state.context });
+    RELAY.out.then(() => relayStop()); // stop polling once the report is on its way; the guest deletes the session
     state.screen = 'report'; renderReport(results);
   }
 }
@@ -555,7 +649,7 @@ function render() {
 }
 
 function dropBanner() {
-  return net.dropped ? '<div class="banner">Connection to your partner’s device was lost. Move closer together and both refresh this page to start a new paired session, or use one-device mode.</div>' : '';
+  return net.dropped ? '<div class="banner">Connection hiccup: we keep retrying automatically. Keep both pages open; you do not need to be on the same network. If this does not clear in a minute, check that both phones have internet.</div>' : '';
 }
 
 function renderIntro() {
@@ -576,7 +670,7 @@ function renderIntro() {
       <p>This is a mirror, not a judge. It will never tell you whether to marry. It will show you the patterns research says matter most, so you can decide with open eyes.</p>
       <p>It has two parts. <strong>Part one</strong> (about 15 minutes): you each answer your own questionnaire, at the same time, on your own phones. <strong>Part two</strong> (45-55 minutes): six scenario conversations. You each write your honest response privately, then your screens reveal both answers at the same moment, and you talk it through face to face.</p>
       <p>Best taken while you are seriously dating, <em>before</em> an engagement. Research on 13-year couple trajectories shows the patterns visible now predict what comes later, and it is easier to act on what you learn before the ring changes the stakes.</p>
-      <p class="small">Nothing is stored on any server. In a paired session your answers travel directly between your two devices and live only in your browsers; in one-device mode your progress is saved in this browser so you can resume. At the very end you can optionally contribute anonymized scores (never names, never anything you wrote) to research validation. This is an unvalidated research prototype, not a clinical instrument, and not a substitute for professional counseling. Read the <a href="limitations.html">limitations</a> before you start.</p>
+      <p class="small">Your answers live only in your two browsers. In a paired session they sync end-to-end encrypted: when the two phones cannot reach each other directly, they pass through our relay as unreadable ciphertext that is deleted when you finish, and the key never leaves your join code. Any networks work; you do not need the same wifi. In one-device mode your progress is saved in this browser so you can resume. At the very end you can optionally contribute anonymized scores (never names, never anything you wrote) to research validation. This is an unvalidated research prototype, not a clinical instrument, and not a substitute for professional counseling. Read the <a href="limitations.html">limitations</a> before you start.</p>
     </div>
     <button class="primary" onclick="go('mode')">Start</button>
     <p style="margin:14px 0 0"><span style="display:inline-flex;align-items:center;gap:7px;background:var(--green-bg);color:var(--green);font-size:13px;font-weight:500;padding:5px 14px;border-radius:99px"><svg width="13" height="15" viewBox="0 0 13 15" aria-hidden="true"><rect x="1" y="6" width="11" height="8" rx="2" fill="currentColor"/><path d="M3.5 6 V4.5 a3 3 0 0 1 6 0 V6" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>No account · No storage · No email</span></p>`;
@@ -585,7 +679,7 @@ function renderIntro() {
 function renderMode() {
   app.innerHTML = `
     <h2 style="margin-top:0">How are you taking it?</h2>
-    <p class="muted">You will need to be in the same room either way. Part two happens out loud.</p>
+    <p class="muted">Part two happens out loud, side by side. Part one works anywhere: same room, different rooms, even different cities, on any networks.</p>
     <div class="card modecard" onclick="net.pendingRole='host';go('pair-name')">
       <h3 style="margin-top:0">Two phones, together <span class="pill" style="background:var(--green-bg);color:var(--green)">Recommended</span></h3>
       <p class="muted" style="margin:0">One of you starts a session and the other joins by scanning a QR code or typing a short code. You both answer at the same time on your own phones. No waiting, no passing, and your private answers stay private.</p>
@@ -608,7 +702,7 @@ function renderPairName() {
       <h3 style="margin-top:0">Your first name</h3>
       <input type="text" id="myname" value="${esc(net.myName)}" placeholder="e.g. Selin" autocomplete="given-name">
       ${joining ? `<h3>Session code</h3>
-      <input type="text" id="joincode" value="${esc(net.prefillCode || '')}" placeholder="6-letter code from your partner’s screen" style="text-transform:uppercase" maxlength="6">` : ''}
+      <input type="text" id="joincode" value="${esc(net.prefillCode || '')}" placeholder="e.g. ABC234-K7M2Q9P4" style="text-transform:uppercase" maxlength="16" autocapitalize="characters" autocomplete="off">` : ''}
     </div>
     <div class="nav"><button onclick="go('mode')">Back</button>
     <button class="primary" onclick="pairGo(${joining})">${joining ? 'Connect' : 'Create session'}</button></div>
@@ -619,8 +713,8 @@ function pairGo(joining) {
   net.myName = document.getElementById('myname').value.trim();
   if (!net.myName) { document.getElementById('warn').style.display = 'block'; return; }
   if (joining) {
-    const code = (document.getElementById('joincode').value || '').trim().toUpperCase();
-    if (code.length !== 6) { document.getElementById('warn').style.display = 'block'; return; }
+    const code = (document.getElementById('joincode').value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (code.length !== 14 && code.length !== 6) { document.getElementById('warn').style.display = 'block'; return; }
     startGuest(code);
   } else {
     startHost();
@@ -628,15 +722,16 @@ function pairGo(joining) {
 }
 
 function renderPairHost() {
-  const joinUrl = location.origin + location.pathname + '#join=' + net.code;
+  const joinUrl = location.origin + location.pathname + '#join=' + net.code + net.secret;
   app.innerHTML = dropBanner() + `
     <h2 style="margin-top:0">Your session is ready</h2>
-    <p class="muted">Have ${net.otherName ? esc(net.otherName) : 'your partner'} scan this with their phone camera, or go to this page, choose “Join your partner’s session”, and type the code.</p>
+    <p class="muted">Have ${net.otherName ? esc(net.otherName) : 'your partner'} scan this with their phone camera, or go to this page, choose “Join your partner’s session”, and type the code exactly.</p>
     <div class="card center">
       <div id="qr"></div>
       <p class="small" style="margin:0 0 4px">or enter the code</p>
-      <div class="codebox">${net.code}</div>
+      <div class="codebox">${net.code}-${net.secret}</div>
       <p class="small" style="margin:8px 0 0">${net.connected ? '<span class="pulse"></span>' + esc(net.otherName || 'Partner') + ' is connected.' : '<span class="pulse"></span>Waiting for your partner to join…'}</p>
+      <p class="small" style="margin:8px 0 0">Any wifi or mobile data works. You do not need to be on the same network, or even in the same place for part one.</p>
     </div>
     <div class="nav"><button onclick="location.reload()">Cancel</button><span></span></div>`;
   if (typeof QRCode !== 'undefined') new QRCode(document.getElementById('qr'), { text: joinUrl, width: 190, height: 190, correctLevel: QRCode.CorrectLevel.M });
@@ -646,7 +741,7 @@ function renderConnecting() {
   app.innerHTML = dropBanner() + `
     <div class="card center" style="padding:48px 24px">
       <h2 style="margin-top:0"><span class="pulse"></span>Connecting to ${esc(net.code)}…</h2>
-      <p class="muted">Make sure your partner’s session screen is open.</p>
+      <p class="muted">Make sure your partner’s session screen is open. Any wifi or mobile data works; you do not need the same network.</p>
       <button onclick="location.reload()">Cancel</button>
     </div>`;
 }
@@ -756,7 +851,14 @@ function setAnswer(dimKey, i, v) {
   const p = state.quizPartner;
   if (!state.answers[p][dimKey]) state.answers[p][dimKey] = [];
   state.answers[p][dimKey][i] = v;
-  if (net.mode !== 'solo') { net.myProgress = countAnswered(p); send({ t: 'progress', n: net.myProgress }); }
+  if (net.mode !== 'solo') {
+    net.myProgress = countAnswered(p);
+    const now = Date.now();
+    if (p2pOpen() || now - net.lastProgressSent > 1200 || net.myProgress === net.totalItems) {
+      net.lastProgressSent = now;
+      send({ t: 'progress', n: net.myProgress });
+    }
+  }
   persist();
 }
 
@@ -1245,10 +1347,12 @@ function loadSample() {
 }
 
 // Deep link: test.html#join=CODE (or ?join=CODE) goes straight to the join screen.
-const hashMatch = location.hash.match(/join=([A-Za-z0-9]{6})/);
-const joinParam = hashMatch ? hashMatch[1] : new URLSearchParams(location.search).get('join');
-if (joinParam && joinParam.length === 6) {
-  net.pendingRole = 'join'; net.prefillCode = joinParam.toUpperCase();
+const hashMatch = location.hash.match(/join=([A-Za-z0-9-]{6,20})/);
+const joinRaw = (hashMatch ? hashMatch[1] : new URLSearchParams(location.search).get('join')) || '';
+const joinDigits = joinRaw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+if (joinDigits.length === 6 || joinDigits.length === 14) {
+  net.pendingRole = 'join';
+  net.prefillCode = joinDigits.length === 14 ? joinDigits.slice(0, 6) + '-' + joinDigits.slice(6) : joinDigits;
   state.screen = 'pair-name';
 }
 if (location.hash.includes('sample')) loadSample(); else render();
