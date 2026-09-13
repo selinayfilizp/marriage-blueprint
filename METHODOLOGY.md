@@ -1,4 +1,4 @@
-# The Marriage Blueprint, Methodology & Research Rationale (v0.1)
+# The Marriage Blueprint, Methodology & Research Rationale (v0.3)
 
 This document explains every structural decision in the assessment: why each dimension exists, why the test has the shape it has, how scoring works, and where the evidence is strong versus provisional. It is written to be handed to a psychometrician, a clinical advisor, or an investor doing diligence.
 
@@ -22,11 +22,11 @@ The assessment's three-layer architecture maps directly onto Karney & Bradbury's
 |---|---|---|
 | Enduring vulnerabilities | Layer 1 | Attachment, personality, family-of-origin, relationship narrative |
 | Stressful events | Layer 2 | Financial architecture, life transitions, external stressors, digital strain |
-| Adaptive processes | Layer 3 | Conflict conduct, repair, commitment structure |
+| Adaptive processes | Layer 3 | Conflict conduct, repair, commitment structure, mutuality |
 
 The model's central claim: outcomes are not determined by any single factor but by the *interaction*, vulnerable people under high stress with weak adaptation decline; the same vulnerabilities with strong adaptation and manageable stress do fine. This is why the report never reduces to a single score.
 
-## 3. The ten dimensions and their evidence base
+## 3. The eleven dimensions and their evidence base
 
 ### Layer 1, Enduring vulnerabilities
 
@@ -53,6 +53,8 @@ The model's central claim: outcomes are not determined by any single factor but 
 **REP · Repair capacity** (weight 3, Tier 1). What distinguishes stable couples is not the absence of negativity but whether de-escalation attempts are made *and accepted*. This is measured twice: by self-report items here and behaviorally in the scenario reflections.
 
 **COM · Commitment structure** (weight 3, Tier 1). Karney & Bradbury's review of 115 longitudinal studies found the satisfaction→stability link is well-replicated but modest; stably happy couples still divorce at ~14% over ten years. Social exchange theory holds that stability is governed by dedication plus barriers and alternatives, so we measure the commitment architecture directly rather than inferring it from satisfaction.
+
+**MUT · Mutuality and appreciation** (weight 3, Tier 1; added in v0.3). Joel et al. (2020, PNAS; 43 longitudinal datasets, 11,196 couples) found that relationship-specific perceptions, above all perceived partner commitment, appreciation, and perceived partner satisfaction, out-predicted every individual-difference variable including personality. This dimension measures exactly those: whether each partner believes the other is all-in, believes the other is happy, and both gives and receives appreciation.
 
 ## 4. Why scenarios instead of more survey items (Mode B)
 
@@ -95,12 +97,12 @@ The six scenarios are not arbitrary: each targets a domain with documented predi
 4. **Identity, not score.** The type is the emotional payload, the "that's so us" moment that makes the Enneagram sticky, but ours is anchored to real cluster analysis. Dimensions carry the precision; the type carries the memorability.
 5. **Honest about its own epistemic status.** The report states plainly that this is an unvalidated prototype built on validated findings. Overstated precision is the field's besetting sin (popularized "94% prediction accuracy" claims did not survive our adversarial source verification).
 
-## 7. Known limitations of v0.1
+## 7. Known limitations of v0.3
 
 - **Unvalidated as an instrument.** The components rest on published research; the assembly does not yet have its own reliability/validity data. That requires the study below.
 - **Custom items, not licensed scales.** Items are construct-faithful originals, not the validated ECR-R/BFI/CSI items. Fine for a prototype; a validated deployment should license or adopt the source scales.
 - **Self-coded behavior** (see §4).
-- **Single-device, sequential flow.** Honesty depends on the handoff protocol being respected. Production version: separate links per partner.
+- **Single-device honesty, plus paired two-phone mode.** One-device honesty depends on the handoff protocol being respected. Two-phone mode keeps individual answers on each device and syncs end-to-end encrypted.
 - **WEIRD evidence base.** The foundational studies used predominantly white, middle-class American samples. Cross-cultural validity of both the dimensions and the typology is an open research question, flagged, not solved.
 - **No clinical routing.** A production instrument needs screening and referral logic for intimate partner violence and coercive control, which self-report compatibility tools can mask. This is the most important safety gap before any real deployment.
 
@@ -108,7 +110,7 @@ The six scenarios are not arbitrary: each targets a domain with documented predi
 
 1. **Content validity review**, 3-5 relationship researchers/clinicians review item-construct mapping.
 2. **Pilot (n≈100 couples)**, item analysis, internal consistency (target α ≥ .75/dimension), floor/ceiling checks, completion analytics.
-3. **Structure study (n≈500 couples)**, confirmatory factor analysis of the 10-dimension model; latent profile analysis to re-derive couple types from our own data (expect the seven Olson-like clusters; accept what the data says).
+3. **Structure study (n≈500 couples)**, confirmatory factor analysis of the 11-dimension model; latent profile analysis to re-derive couple types from our own data (expect the seven Olson-like clusters; accept what the data says).
 4. **NLP coding study**, LLM coding of scenario texts vs. 3 trained human coders (target κ > .70); replaces self-coding if achieved.
 5. **Longitudinal criterion study**, follow assessed couples 3-5 years; test whether types, trajectories, and forecasts predict engagement decisions, satisfaction (CSI-16), and dissolution.
 6. **Moderation studies**, implement and test SES and cultural calibration against outcome data.

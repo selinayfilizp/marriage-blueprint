@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>What is your pattern? A 3-minute solo quiz | The Marriage Blueprint</title>
 <link rel="stylesheet" href="styles.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#FAF9F5">
 <meta name="description" content="Six quick questions, one partner, three honest insights about how you show up in conflict, repair, and commitment. Then get the full picture together with the Marriage Blueprint.">
 <link rel="canonical" href="https://marriage-blueprint.vercel.app/pattern-quiz.html">
 <meta property="og:site_name" content="The Marriage Blueprint">
@@ -26,8 +28,8 @@
 </style>
 </head>
 <body>
-<nav class="topnav"><div class="inner">
-  <a class="brand" href="index.html">The Marriage Blueprint</a>
+<nav class="topnav" aria-label="Main"><div class="inner">
+  <a class="brand" href="index.html"><img class="mark" src="favicon.svg" alt="" width="22" height="22">The Marriage Blueprint</a>
   <a href="index.html">Home</a>
   <a href="test.html">Take the test</a>
   <a href="methodology.html">Methodology</a>
@@ -67,13 +69,15 @@ function render() {
       <p class="muted" style="margin-bottom:18px">Answer with your instinct, not your ideal.</p>
       <button class="opt" onclick="pick('a')">${q.a}</button>
       <button class="opt" onclick="pick('b')">${q.b}</button>
-      ${state.i === 0 ? '<p class="small" style="margin-top:16px">One partner, six questions, nothing stored anywhere. This is a taste of the full assessment, not a verdict on anything.</p>' : ''}`;
+      ${state.i > 0 ? '<p class="small" style="margin-top:8px"><button onclick="backQ()">Back</button></p>' : ''}
+      ${state.i === 0 ? '<p class="small" style="margin-top:16px">One partner, six questions, nothing stored on this device beyond this page. This is a taste of the full assessment, not a verdict on anything.</p>' : ''}`;
   } else {
     renderResult();
   }
 }
 
 function pick(v) { state.ans.push(v); state.i++; render(); }
+function backQ() { if (state.i > 0) { state.i--; state.ans.pop(); render(); } }
 
 function renderResult() {
   const byDim = {};
@@ -119,7 +123,7 @@ function renderResult() {
       </p>
       <p class="small" id="copied" style="display:none;margin:10px 0 0;color:var(--green)">Link copied. Paste it to your partner.</p>
     </div>
-    <p class="small">Free, private, nothing stored on any server. Built on published longitudinal research; see the <a href="methodology.html">methodology</a>.</p>`;
+    <p class="small">Free, private, answers stay on your devices. Built on published longitudinal research; see the <a href="methodology.html">methodology</a>.</p>`;
 }
 
 function invite() {

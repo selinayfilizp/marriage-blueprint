@@ -8,6 +8,10 @@ const S = (v, n) => String(v == null ? '' : v).slice(0, n);
 const N = v => { const x = Math.round(Number(v)); return Number.isFinite(x) ? Math.max(-1, Math.min(100, x)) : null; };
 
 export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'method not allowed' });
   let b = req.body;
   try { if (typeof b === 'string') b = JSON.parse(b); } catch (e) { return res.status(400).json({ error: 'bad json' }); }

@@ -1,15 +1,13 @@
 # The Marriage Blueprint
 
-A research-grounded, pre-engagement compatibility and readiness assessment. Version 0.1, research prototype.
+A research-grounded, pre-engagement compatibility and readiness assessment. Version 0.3, research prototype.
 
-Most compatibility quizzes measure opinions. This one is built to surface patterns: it combines individual questionnaires across ten research-backed dimensions with six guided scenario conversations that reveal how a couple actually navigates disagreement. The output is a couple profile (one of seven empirically-derived partnership types), a dimension map with partner gaps flagged, a conflict portrait scored against the behavioral markers that best predict divorce, a trajectory forecast, and a three-move action plan.
+Most compatibility quizzes measure opinions. This one is built to surface patterns: it combines individual questionnaires across eleven research-backed dimensions with six guided scenario conversations that reveal how a couple actually navigates disagreement. The output is a couple profile (one of seven empirically-derived partnership types), a dimension map with partner gaps flagged, a conflict portrait scored against the behavioral markers that best predict divorce, a trajectory forecast, and a three-move action plan.
 
 ## Try it
 
-The site runs entirely in the browser. Nothing is stored or sent anywhere.
-
 - **Live site:** https://marriage-blueprint.vercel.app
-- **Locally:** open `index.html`, or serve the folder with any static server
+- **Locally:** serve the folder (`npx serve .` or any static server), then open the URL. Pairing uses the Web Crypto API, which browsers only enable on `http://localhost` or HTTPS, so opening `index.html` as a file will not work for two-phone mode.
 
 ## What's here
 
@@ -17,9 +15,11 @@ The site runs entirely in the browser. Nothing is stored or sent anywhere.
 |---|---|
 | `index.html` | Landing page: the pitch and the framing |
 | `test.html` | The full assessment: questionnaires, scenarios, scoring engine, report |
+| `pattern-quiz.html` | A 3-minute solo teaser quiz |
 | `methodology.html` | The research basis for every dimension, weight, and rule |
 | `limitations.html` | What the tool cannot tell you, and when not to use it |
 | `METHODOLOGY.md` | The methodology document in markdown, written for researchers and reviewers |
+| `api/` | Encrypted pairing relay and opt-in research donation (Vercel) |
 | `styles.css` | Shared styling |
 
 ## The research basis, in brief
@@ -30,6 +30,10 @@ The site runs entirely in the browser. Nothing is stored or sent anywhere.
 - The before-the-engagement positioning follows Huston's 13-year PAIR project, which showed courtship-stage patterns already predict long-term outcomes.
 
 Full sources and the claims that were excluded after verification are in `methodology.html`.
+
+## Privacy, in brief
+
+No accounts, no email. Answers live on the two devices. Paired sessions sync end-to-end encrypted: the key travels only inside the QR / join code. When the phones cannot reach each other directly, encrypted ciphertext passes through this site's relay and is deleted when the couple finishes. One-device sessions can save progress in that browser. At the end, couples may optionally donate anonymized scores (never names or written responses) to research validation. Details: `limitations.html`.
 
 ## Status and caveats
 
